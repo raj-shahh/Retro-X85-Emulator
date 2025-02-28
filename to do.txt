@@ -1,0 +1,15 @@
+olc6502.h:
+	addressing mode
+	instruction set
+	register
+
+olc6502.cpp:
+	lookup
+
+
+video file:
+	onUserCreate -> hardcoded to file
+
+
+draw cpu:
+	add register display
