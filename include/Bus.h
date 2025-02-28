@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <array>
 
-#include "olc6502.h" // full definition of cpu as bus needs cpu object[data member]
+#include "cpu8085.h" // full definition of cpu as bus needs cpu object[data member]
 
 class Bus
 {
@@ -11,7 +11,7 @@ public:
 	~Bus();
 
 public: // Devices on bus
-	olc6502 cpu;	
+	cpu8085 cpu;	
 
 	// Fake RAM for this part of the series
 	std::array<uint8_t, 64 * 1024> ram;

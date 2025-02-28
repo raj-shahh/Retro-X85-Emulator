@@ -28,16 +28,16 @@ Bus needs Cpu obj: #include cpu.h (full definition)
 class Bus;
 
 
-// The 6502 Emulation Class. This is it!
-class olc6502
+// The Emulation Class.
+class cpu8085
 {
 public:
-	olc6502();
-	~olc6502();
+	cpu8085();
+	~cpu8085();
 
 public:
 	// CPU Core registers, exposed as public here for ease of access from external
-	// examinors. This is all the 6502 has.
+	// examinors. 
 	uint8_t  a      = 0x00;		// Accumulator Register
 	uint8_t  x      = 0x00;		// X Register
 	uint8_t  y      = 0x00;		// Y Register
@@ -64,11 +64,8 @@ public:
 	// in memory, for the specified address range
 	std::map<uint16_t, std::string> disassemble(uint16_t nStart, uint16_t nStop);
 
-	// The status register stores 8 flags. Ive enumerated these here for ease
-	// of access. You can access the status register directly since its public.
-	// The bits have different interpretations depending upon the context and 
-	// instruction being executed.
-	enum FLAGS6502
+	// The status register stores 8 flags.
+	enum FLAGS8085
 	{
 		C = (1 << 0),	// Carry Bit
 		Z = (1 << 1),	// Zero
@@ -82,8 +79,8 @@ public:
 
 private:
 	// Convenience functions to access status register
-	uint8_t GetFlag(FLAGS6502 f);
-	void    SetFlag(FLAGS6502 f, bool v);
+	uint8_t GetFlag(FLAGS8085 f);
+	void    SetFlag(FLAGS8085 f, bool v);
 	
 	// Assisstive variables to facilitate emulation
 	uint8_t  fetched     = 0x00;   // Represents the working input value to the ALU
@@ -104,11 +101,7 @@ private:
 	// depending on address mode of instruction byte
 	uint8_t fetch();
 
-	// This structure and the following vector are used to compile and store
-	// the opcode translation table. The 6502 can effectively have 256
-	// different instructions. Each of these are stored in a table in numerical
-	// order so they can be looked up easily, with no decoding required.
-	// Each table entry holds:
+	// Each table(lookup -vector) entry holds:
 	//	Pneumonic : A textual representation of the instruction (used for disassembly)
 	//	Opcode Function: A function pointer to the implementation of the opcode
 	//	Opcode Address Mode : A function pointer to the implementation of the 
@@ -119,8 +112,8 @@ private:
 	struct INSTRUCTION
 	{
 		std::string name;		
-		uint8_t     (olc6502::*operate )(void) = nullptr;
-		uint8_t     (olc6502::*addrmode)(void) = nullptr;
+		uint8_t     (cpu8085::*operate )(void) = nullptr;
+		uint8_t     (cpu8085::*addrmode)(void) = nullptr;
 		uint8_t     cycles = 0;
 	};
 
@@ -128,20 +121,6 @@ private:
 	
 private: 
 	// Addressing Modes =============================================
-	// The 6502 has a variety of addressing modes to access data in 
-	// memory, some of which are direct and some are indirect (like
-	// pointers in C++). Each opcode contains information about which
-	// addressing mode should be employed to facilitate the 
-	// instruction, in regards to where it reads/writes the data it
-	// uses. The address mode changes the number of bytes that
-	// makes up the full instruction, so we implement addressing
-	// before executing the instruction, to make sure the program
-	// counter is at the correct location, the instruction is
-	// primed with the addresses it needs, and the number of clock
-	// cycles the instruction requires is calculated. These functions
-	// may adjust the number of cycles required depending upon where
-	// and how the memory is accessed, so they return the required
-	// adjustment.
 
 	uint8_t IMP();	uint8_t IMM();	
 	uint8_t ZP0();	uint8_t ZPX();	
@@ -151,27 +130,7 @@ private:
 	uint8_t IZX();	uint8_t IZY();
 
 private: 
-	// Opcodes ======================================================
-	// There are 56 "legitimate" opcodes provided by the 6502 CPU. I
-	// have not modelled "unofficial" opcodes. As each opcode is 
-	// defined by 1 byte, there are potentially 256 possible codes.
-	// Codes are not used in a "switch case" style on a processor,
-	// instead they are repsonisble for switching individual parts of
-	// CPU circuits on and off. The opcodes listed here are official, 
-	// meaning that the functionality of the chip when provided with
-	// these codes is as the developers intended it to be. Unofficial
-	// codes will of course also influence the CPU circuitry in 
-	// interesting ways, and can be exploited to gain additional
-	// functionality!
-	//
-	// These functions return 0 normally, but some are capable of
-	// requiring more clock cycles when executed under certain
-	// conditions combined with certain addressing modes. If that is 
-	// the case, they return 1.
-	//
-	// I have included detailed explanations of each function in 
-	// the class implementation file. Note they are listed in
-	// alphabetical order here for ease of finding.
+	// Opcodes ===================INstructions===================================
 
 	uint8_t ADC();	uint8_t AND();	uint8_t ASL();	uint8_t BCC();
 	uint8_t BCS();	uint8_t BEQ();	uint8_t BIT();	uint8_t BMI();
@@ -198,4 +157,3 @@ private:
 #endif
 };
 
-// End of File - Jx9

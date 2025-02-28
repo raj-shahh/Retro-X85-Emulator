@@ -1,22 +1,14 @@
 
-#include "olc6502.h"
+#include "cpu8085.h"
 #include "Bus.h"
 
 // Constructor
-olc6502::olc6502()
+cpu8085::cpu8085()
 {
-	// Assembles the translation table. It's big, it's ugly, but it yields a convenient way
-	// to emulate the 6502. I'm certain there are some "code-golf" strategies to reduce this
-	// but I've deliberately kept it verbose for study and alteration
-	
-	// It is 16x16 entries. This gives 256 instructions. It is arranged to that the bottom
-	// 4 bits of the instruction choose the column, and the top 4 bits choose the row.
 
-	// For convenience to get function pointers to members of this class, I'm using this
-	// or else it will be much much larger :D
 
 	// The table is one big initialiser list of initialiser lists...
-	using a = olc6502;
+	using a = cpu8085;
 	lookup = 
 	{
 		{ "BRK", &a::BRK, &a::IMM, 7 },{ "ORA", &a::ORA, &a::IZX, 6 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 3 },{ "ORA", &a::ORA, &a::ZP0, 3 },{ "ASL", &a::ASL, &a::ZP0, 5 },{ "???", &a::XXX, &a::IMP, 5 },{ "PHP", &a::PHP, &a::IMP, 3 },{ "ORA", &a::ORA, &a::IMM, 2 },{ "ASL", &a::ASL, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::NOP, &a::IMP, 4 },{ "ORA", &a::ORA, &a::ABS, 4 },{ "ASL", &a::ASL, &a::ABS, 6 },{ "???", &a::XXX, &a::IMP, 6 },
@@ -38,7 +30,7 @@ olc6502::olc6502()
 	};
 }
 
-olc6502::~olc6502()
+cpu8085::~cpu8085()
 {
 	// Destructor - has nothing to do
 }
@@ -51,7 +43,7 @@ olc6502::~olc6502()
 // BUS CONNECTIVITY
 
 // Reads an 8-bit byte from the bus, located at the specified 16-bit address
-uint8_t olc6502::read(uint16_t a)
+uint8_t cpu8085::read(uint16_t a)
 {
 	// In normal operation "read only" is set to false. This may seem odd. Some
 	// devices on the bus may change state when they are read from, and this 
@@ -62,7 +54,7 @@ uint8_t olc6502::read(uint16_t a)
 }
 
 // Writes a byte to the bus at the specified address
-void olc6502::write(uint16_t a, uint8_t d)
+void cpu8085::write(uint16_t a, uint8_t d)
 {
 	bus->write(a, d);
 }
@@ -74,14 +66,14 @@ void olc6502::write(uint16_t a, uint8_t d)
 ///////////////////////////////////////////////////////////////////////////////
 // EXTERNAL INPUTS
 
-// Forces the 6502 into a known state. This is hard-wired inside the CPU. The
+// Forces the 8085 into a known state. This is hard-wired inside the CPU. The
 // registers are set to 0x00, the status register is cleared except for unused
 // bit which remains at 1. An absolute address is read from location 0xFFFC
 // which contains a second address that the program counter is set to. This 
 // allows the programmer to jump to a known and programmable location in the
 // memory to start executing from. Typically the programmer would set the value
 // at location 0xFFFC at compile time.
-void olc6502::reset()
+void cpu8085::reset()
 {
 	// Get address to set program counter to
 	addr_abs = 0xFFFC;
@@ -121,7 +113,7 @@ void olc6502::reset()
 // has happened, in a similar way to a reset, a programmable address
 // is read form hard coded location 0xFFFE, which is subsequently
 // set to the program counter.
-void olc6502::irq()
+void cpu8085::irq()
 {
 	// If interrupts are allowed
 	if (GetFlag(I) == 0)
@@ -155,7 +147,7 @@ void olc6502::irq()
 // A Non-Maskable Interrupt cannot be ignored. It behaves in exactly the
 // same way as a regular IRQ, but reads the new program counter address
 // form location 0xFFFA.
-void olc6502::nmi()
+void cpu8085::nmi()
 {
 	write(0x0100 + stkp, (pc >> 8) & 0x00FF);
 	stkp--;
@@ -177,7 +169,7 @@ void olc6502::nmi()
 }
 
 // Perform one clock cycles worth of emulation
-void olc6502::clock()
+void cpu8085::clock()
 {
 	// Each instruction requires a variable number of clock cycles to execute.
 	// In my emulation, I only care about the final result and so I perform
@@ -213,7 +205,7 @@ void olc6502::clock()
 		// required addressing mode
 		uint8_t additional_cycle1 = (this->*lookup[opcode].addrmode)();
 
-		// Perform operation
+		// Perform operation [function call to Instrs]
 		uint8_t additional_cycle2 = (this->*lookup[opcode].operate)();
 
 		// The addressmode and opcode may have altered the number
@@ -227,7 +219,7 @@ void olc6502::clock()
 		// This logger dumps every cycle the entire processor state for analysis.
 		// This can be used for debugging the emulation, but has little utility
 		// during emulation. Its also very slow, so only use if you have to.
-		if (logfile == nullptr)	logfile = fopen("olc6502.txt", "wt");
+		if (logfile == nullptr)	logfile = fopen("cpu8085.txt", "wt");
 		if (logfile != nullptr)
 		{
 			fprintf(logfile, "%10d:%02d PC:%04X %s A:%02X X:%02X Y:%02X %s%s%s%s%s%s%s%s STKP:%02X\n",
@@ -255,13 +247,13 @@ void olc6502::clock()
 // FLAG FUNCTIONS
 
 // Returns the value of a specific bit of the status register
-uint8_t olc6502::GetFlag(FLAGS6502 f)
+uint8_t cpu8085::GetFlag(FLAGS8085 f)
 {
 	return ((status & f) > 0) ? 1 : 0;
 }
 
 // Sets or clears a specific bit of the status register
-void olc6502::SetFlag(FLAGS6502 f, bool v)
+void cpu8085::SetFlag(FLAGS8085 f, bool v)
 {
 	if (v)
 		status |= f;
@@ -276,7 +268,7 @@ void olc6502::SetFlag(FLAGS6502 f, bool v)
 ///////////////////////////////////////////////////////////////////////////////
 // ADDRESSING MODES
 
-// The 6502 can address between 0x0000 - 0xFFFF. The high byte is often referred
+// The 8085 can address between 0x0000 - 0xFFFF. The high byte is often referred
 // to as the "page", and the low byte is the offset into that page. This implies
 // there are 256 pages, each containing 256 bytes.
 //
@@ -291,7 +283,7 @@ void olc6502::SetFlag(FLAGS6502 f, bool v)
 // There is no additional data required for this instruction. The instruction
 // does something very simple like like sets a status bit. However, we will
 // target the accumulator, for instructions like PHA
-uint8_t olc6502::IMP()
+uint8_t cpu8085::IMP()
 {
 	fetched = a;
 	return 0;
@@ -301,7 +293,7 @@ uint8_t olc6502::IMP()
 // Address Mode: Immediate
 // The instruction expects the next byte to be used as a value, so we'll prep
 // the read address to point to the next byte
-uint8_t olc6502::IMM()
+uint8_t cpu8085::IMM()
 {
 	addr_abs = pc++;	
 	return 0;
@@ -313,7 +305,7 @@ uint8_t olc6502::IMM()
 // To save program bytes, zero page addressing allows you to absolutely address
 // a location in first 0xFF bytes of address range. Clearly this only requires
 // one byte instead of the usual two.
-uint8_t olc6502::ZP0()
+uint8_t cpu8085::ZP0()
 {
 	addr_abs = read(pc);	
 	pc++;
@@ -327,7 +319,7 @@ uint8_t olc6502::ZP0()
 // Fundamentally the same as Zero Page addressing, but the contents of the X Register
 // is added to the supplied single byte address. This is useful for iterating through
 // ranges within the first page.
-uint8_t olc6502::ZPX()
+uint8_t cpu8085::ZPX()
 {
 	addr_abs = (read(pc) + x);
 	pc++;
@@ -338,7 +330,7 @@ uint8_t olc6502::ZPX()
 
 // Address Mode: Zero Page with Y Offset
 // Same as above but uses Y Register for offset
-uint8_t olc6502::ZPY()
+uint8_t cpu8085::ZPY()
 {
 	addr_abs = (read(pc) + y);
 	pc++;
@@ -351,7 +343,7 @@ uint8_t olc6502::ZPY()
 // This address mode is exclusive to branch instructions. The address
 // must reside within -128 to +127 of the branch instruction, i.e.
 // you cant directly branch to any address in the addressable range.
-uint8_t olc6502::REL()
+uint8_t cpu8085::REL()
 {
 	addr_rel = read(pc);
 	pc++;
@@ -363,7 +355,7 @@ uint8_t olc6502::REL()
 
 // Address Mode: Absolute 
 // A full 16-bit address is loaded and used
-uint8_t olc6502::ABS()
+uint8_t cpu8085::ABS()
 {
 	uint16_t lo = read(pc);
 	pc++;
@@ -380,7 +372,7 @@ uint8_t olc6502::ABS()
 // Fundamentally the same as absolute addressing, but the contents of the X Register
 // is added to the supplied two byte address. If the resulting address changes
 // the page, an additional clock cycle is required
-uint8_t olc6502::ABX()
+uint8_t cpu8085::ABX()
 {
 	uint16_t lo = read(pc);
 	pc++;
@@ -401,7 +393,7 @@ uint8_t olc6502::ABX()
 // Fundamentally the same as absolute addressing, but the contents of the Y Register
 // is added to the supplied two byte address. If the resulting address changes
 // the page, an additional clock cycle is required
-uint8_t olc6502::ABY()
+uint8_t cpu8085::ABY()
 {
 	uint16_t lo = read(pc);
 	pc++;
@@ -427,7 +419,7 @@ uint8_t olc6502::ABY()
 // we need to cross a page boundary. This doesnt actually work on the chip as 
 // designed, instead it wraps back around in the same page, yielding an 
 // invalid actual address
-uint8_t olc6502::IND()
+uint8_t cpu8085::IND()
 {
 	uint16_t ptr_lo = read(pc);
 	pc++;
@@ -453,7 +445,7 @@ uint8_t olc6502::IND()
 // The supplied 8-bit address is offset by X Register to index
 // a location in page 0x00. The actual 16-bit address is read 
 // from this location
-uint8_t olc6502::IZX()
+uint8_t cpu8085::IZX()
 {
 	uint16_t t = read(pc);
 	pc++;
@@ -472,7 +464,7 @@ uint8_t olc6502::IZX()
 // here the actual 16-bit address is read, and the contents of
 // Y Register is added to it to offset it. If the offset causes a
 // change in page then an additional clock cycle is required.
-uint8_t olc6502::IZY()
+uint8_t cpu8085::IZY()
 {
 	uint16_t t = read(pc);
 	pc++;
@@ -503,9 +495,9 @@ uint8_t olc6502::IZY()
 // 256, i.e. no far reaching memory fetch is required. "fetched"
 // is a variable global to the CPU, and is set by calling this 
 // function. It also returns it for convenience.
-uint8_t olc6502::fetch()
+uint8_t cpu8085::fetch()
 {
-	if (!(lookup[opcode].addrmode == &olc6502::IMP))
+	if (!(lookup[opcode].addrmode == &cpu8085::IMP))
 		fetched = read(addr_abs);
 	return fetched;
 }
@@ -530,10 +522,10 @@ uint8_t olc6502::fetch()
 // The purpose of this function is to add a value to the accumulator and a carry bit. If
 // the result is > 255 there is an overflow setting the carry bit. Ths allows you to
 // chain together ADC instructions to add numbers larger than 8-bits. This in itself is
-// simple, however the 6502 supports the concepts of Negativity/Positivity and Signed Overflow.
+// simple, however the 8085 supports the concepts of Negativity/Positivity and Signed Overflow.
 //
 // 10000100 = 128 + 4 = 132 in normal circumstances, we know this as unsigned and it allows
-// us to represent numbers between 0 and 255 (given 8 bits). The 6502 can also interpret 
+// us to represent numbers between 0 and 255 (given 8 bits). The 8085 can also interpret 
 // this word as something else if we assume those 8 bits represent the range -128 to +127,
 // i.e. it has become signed.
 //
@@ -554,7 +546,7 @@ uint8_t olc6502::fetch()
 // 10000000 = -128, 11111111 = -1, 00000000 = 0, 00000000 = +1, 01111111 = +127
 // therefore negative numbers have the most significant set, positive numbers do not
 //
-// To assist us, the 6502 can set the overflow flag, if the result of the addition has
+// To assist us, the 8085 can set the overflow flag, if the result of the addition has
 // wrapped around. V <- ~(A^M) & A^(A+M+C) :D lol, let's work out why!
 //
 // Let's suppose we have A = 30, M = 10 and C = 0
@@ -584,7 +576,7 @@ uint8_t olc6502::fetch()
 //       Positive Number + Positive Number = Positive Result -> OK! No Overflow
 //       Negative Number + Negative Number = Negative Result -> OK! NO Overflow
 
-uint8_t olc6502::ADC()
+uint8_t cpu8085::ADC()
 {
 	// Grab the data that we are adding to the accumulator
 	fetch();
@@ -639,7 +631,7 @@ uint8_t olc6502::ADC()
 // of M, the data(!) therfore we can simply add, exactly the same way we did 
 // before.
 
-uint8_t olc6502::SBC()
+uint8_t cpu8085::SBC()
 {
 	fetch();
 	
@@ -671,7 +663,7 @@ uint8_t olc6502::SBC()
 // Instruction: Bitwise Logic AND
 // Function:    A = A & M
 // Flags Out:   N, Z
-uint8_t olc6502::AND()
+uint8_t cpu8085::AND()
 {
 	fetch();
 	a = a & fetched;
@@ -684,14 +676,14 @@ uint8_t olc6502::AND()
 // Instruction: Arithmetic Shift Left
 // Function:    A = C <- (A << 1) <- 0
 // Flags Out:   N, Z, C
-uint8_t olc6502::ASL()
+uint8_t cpu8085::ASL()
 {
 	fetch();
 	temp = (uint16_t)fetched << 1;
 	SetFlag(C, (temp & 0xFF00) > 0);
 	SetFlag(Z, (temp & 0x00FF) == 0x00);
 	SetFlag(N, temp & 0x80);
-	if (lookup[opcode].addrmode == &olc6502::IMP)
+	if (lookup[opcode].addrmode == &cpu8085::IMP)
 		a = temp & 0x00FF;
 	else
 		write(addr_abs, temp & 0x00FF);
@@ -701,7 +693,7 @@ uint8_t olc6502::ASL()
 
 // Instruction: Branch if Carry Clear
 // Function:    if(C == 0) pc = address 
-uint8_t olc6502::BCC()
+uint8_t cpu8085::BCC()
 {
 	if (GetFlag(C) == 0)
 	{
@@ -719,7 +711,7 @@ uint8_t olc6502::BCC()
 
 // Instruction: Branch if Carry Set
 // Function:    if(C == 1) pc = address
-uint8_t olc6502::BCS()
+uint8_t cpu8085::BCS()
 {
 	if (GetFlag(C) == 1)
 	{
@@ -737,7 +729,7 @@ uint8_t olc6502::BCS()
 
 // Instruction: Branch if Equal
 // Function:    if(Z == 1) pc = address
-uint8_t olc6502::BEQ()
+uint8_t cpu8085::BEQ()
 {
 	if (GetFlag(Z) == 1)
 	{
@@ -752,7 +744,7 @@ uint8_t olc6502::BEQ()
 	return 0;
 }
 
-uint8_t olc6502::BIT()
+uint8_t cpu8085::BIT()
 {
 	fetch();
 	temp = a & fetched;
@@ -765,7 +757,7 @@ uint8_t olc6502::BIT()
 
 // Instruction: Branch if Negative
 // Function:    if(N == 1) pc = address
-uint8_t olc6502::BMI()
+uint8_t cpu8085::BMI()
 {
 	if (GetFlag(N) == 1)
 	{
@@ -783,7 +775,7 @@ uint8_t olc6502::BMI()
 
 // Instruction: Branch if Not Equal
 // Function:    if(Z == 0) pc = address
-uint8_t olc6502::BNE()
+uint8_t cpu8085::BNE()
 {
 	if (GetFlag(Z) == 0)
 	{
@@ -801,7 +793,7 @@ uint8_t olc6502::BNE()
 
 // Instruction: Branch if Positive
 // Function:    if(N == 0) pc = address
-uint8_t olc6502::BPL()
+uint8_t cpu8085::BPL()
 {
 	if (GetFlag(N) == 0)
 	{
@@ -818,7 +810,7 @@ uint8_t olc6502::BPL()
 
 // Instruction: Break
 // Function:    Program Sourced Interrupt
-uint8_t olc6502::BRK()
+uint8_t cpu8085::BRK()
 {
 	pc++;
 	
@@ -840,7 +832,7 @@ uint8_t olc6502::BRK()
 
 // Instruction: Branch if Overflow Clear
 // Function:    if(V == 0) pc = address
-uint8_t olc6502::BVC()
+uint8_t cpu8085::BVC()
 {
 	if (GetFlag(V) == 0)
 	{
@@ -858,7 +850,7 @@ uint8_t olc6502::BVC()
 
 // Instruction: Branch if Overflow Set
 // Function:    if(V == 1) pc = address
-uint8_t olc6502::BVS()
+uint8_t cpu8085::BVS()
 {
 	if (GetFlag(V) == 1)
 	{
@@ -876,7 +868,7 @@ uint8_t olc6502::BVS()
 
 // Instruction: Clear Carry Flag
 // Function:    C = 0
-uint8_t olc6502::CLC()
+uint8_t cpu8085::CLC()
 {
 	SetFlag(C, false);
 	return 0;
@@ -885,7 +877,7 @@ uint8_t olc6502::CLC()
 
 // Instruction: Clear Decimal Flag
 // Function:    D = 0
-uint8_t olc6502::CLD()
+uint8_t cpu8085::CLD()
 {
 	SetFlag(D, false);
 	return 0;
@@ -894,7 +886,7 @@ uint8_t olc6502::CLD()
 
 // Instruction: Disable Interrupts / Clear Interrupt Flag
 // Function:    I = 0
-uint8_t olc6502::CLI()
+uint8_t cpu8085::CLI()
 {
 	SetFlag(I, false);
 	return 0;
@@ -903,7 +895,7 @@ uint8_t olc6502::CLI()
 
 // Instruction: Clear Overflow Flag
 // Function:    V = 0
-uint8_t olc6502::CLV()
+uint8_t cpu8085::CLV()
 {
 	SetFlag(V, false);
 	return 0;
@@ -912,7 +904,7 @@ uint8_t olc6502::CLV()
 // Instruction: Compare Accumulator
 // Function:    C <- A >= M      Z <- (A - M) == 0
 // Flags Out:   N, C, Z
-uint8_t olc6502::CMP()
+uint8_t cpu8085::CMP()
 {
 	fetch();
 	temp = (uint16_t)a - (uint16_t)fetched;
@@ -926,7 +918,7 @@ uint8_t olc6502::CMP()
 // Instruction: Compare X Register
 // Function:    C <- X >= M      Z <- (X - M) == 0
 // Flags Out:   N, C, Z
-uint8_t olc6502::CPX()
+uint8_t cpu8085::CPX()
 {
 	fetch();
 	temp = (uint16_t)x - (uint16_t)fetched;
@@ -940,7 +932,7 @@ uint8_t olc6502::CPX()
 // Instruction: Compare Y Register
 // Function:    C <- Y >= M      Z <- (Y - M) == 0
 // Flags Out:   N, C, Z
-uint8_t olc6502::CPY()
+uint8_t cpu8085::CPY()
 {
 	fetch();
 	temp = (uint16_t)y - (uint16_t)fetched;
@@ -954,7 +946,7 @@ uint8_t olc6502::CPY()
 // Instruction: Decrement Value at Memory Location
 // Function:    M = M - 1
 // Flags Out:   N, Z
-uint8_t olc6502::DEC()
+uint8_t cpu8085::DEC()
 {
 	fetch();
 	temp = fetched - 1;
@@ -968,7 +960,7 @@ uint8_t olc6502::DEC()
 // Instruction: Decrement X Register
 // Function:    X = X - 1
 // Flags Out:   N, Z
-uint8_t olc6502::DEX()
+uint8_t cpu8085::DEX()
 {
 	x--;
 	SetFlag(Z, x == 0x00);
@@ -980,7 +972,7 @@ uint8_t olc6502::DEX()
 // Instruction: Decrement Y Register
 // Function:    Y = Y - 1
 // Flags Out:   N, Z
-uint8_t olc6502::DEY()
+uint8_t cpu8085::DEY()
 {
 	y--;
 	SetFlag(Z, y == 0x00);
@@ -992,7 +984,7 @@ uint8_t olc6502::DEY()
 // Instruction: Bitwise Logic XOR
 // Function:    A = A xor M
 // Flags Out:   N, Z
-uint8_t olc6502::EOR()
+uint8_t cpu8085::EOR()
 {
 	fetch();
 	a = a ^ fetched;	
@@ -1005,7 +997,7 @@ uint8_t olc6502::EOR()
 // Instruction: Increment Value at Memory Location
 // Function:    M = M + 1
 // Flags Out:   N, Z
-uint8_t olc6502::INC()
+uint8_t cpu8085::INC()
 {
 	fetch();
 	temp = fetched + 1;
@@ -1019,7 +1011,7 @@ uint8_t olc6502::INC()
 // Instruction: Increment X Register
 // Function:    X = X + 1
 // Flags Out:   N, Z
-uint8_t olc6502::INX()
+uint8_t cpu8085::INX()
 {
 	x++;
 	SetFlag(Z, x == 0x00);
@@ -1031,7 +1023,7 @@ uint8_t olc6502::INX()
 // Instruction: Increment Y Register
 // Function:    Y = Y + 1
 // Flags Out:   N, Z
-uint8_t olc6502::INY()
+uint8_t cpu8085::INY()
 {
 	y++;
 	SetFlag(Z, y == 0x00);
@@ -1042,7 +1034,7 @@ uint8_t olc6502::INY()
 
 // Instruction: Jump To Location
 // Function:    pc = address
-uint8_t olc6502::JMP()
+uint8_t cpu8085::JMP()
 {
 	pc = addr_abs;
 	return 0;
@@ -1051,7 +1043,7 @@ uint8_t olc6502::JMP()
 
 // Instruction: Jump To Sub-Routine
 // Function:    Push current pc to stack, pc = address
-uint8_t olc6502::JSR()
+uint8_t cpu8085::JSR()
 {
 	pc--;
 
@@ -1068,7 +1060,7 @@ uint8_t olc6502::JSR()
 // Instruction: Load The Accumulator
 // Function:    A = M
 // Flags Out:   N, Z
-uint8_t olc6502::LDA()
+uint8_t cpu8085::LDA()
 {
 	fetch();
 	a = fetched;
@@ -1081,7 +1073,7 @@ uint8_t olc6502::LDA()
 // Instruction: Load The X Register
 // Function:    X = M
 // Flags Out:   N, Z
-uint8_t olc6502::LDX()
+uint8_t cpu8085::LDX()
 {
 	fetch();
 	x = fetched;
@@ -1094,7 +1086,7 @@ uint8_t olc6502::LDX()
 // Instruction: Load The Y Register
 // Function:    Y = M
 // Flags Out:   N, Z
-uint8_t olc6502::LDY()
+uint8_t cpu8085::LDY()
 {
 	fetch();
 	y = fetched;
@@ -1103,21 +1095,21 @@ uint8_t olc6502::LDY()
 	return 1;
 }
 
-uint8_t olc6502::LSR()
+uint8_t cpu8085::LSR()
 {
 	fetch();
 	SetFlag(C, fetched & 0x0001);
 	temp = fetched >> 1;	
 	SetFlag(Z, (temp & 0x00FF) == 0x0000);
 	SetFlag(N, temp & 0x0080);
-	if (lookup[opcode].addrmode == &olc6502::IMP)
+	if (lookup[opcode].addrmode == &cpu8085::IMP)
 		a = temp & 0x00FF;
 	else
 		write(addr_abs, temp & 0x00FF);
 	return 0;
 }
 
-uint8_t olc6502::NOP()
+uint8_t cpu8085::NOP()
 {
 	// Sadly not all NOPs are equal, Ive added a few here
 	// based on https://wiki.nesdev.com/w/index.php/CPU_unofficial_opcodes
@@ -1140,7 +1132,7 @@ uint8_t olc6502::NOP()
 // Instruction: Bitwise Logic OR
 // Function:    A = A | M
 // Flags Out:   N, Z
-uint8_t olc6502::ORA()
+uint8_t cpu8085::ORA()
 {
 	fetch();
 	a = a | fetched;
@@ -1152,7 +1144,7 @@ uint8_t olc6502::ORA()
 
 // Instruction: Push Accumulator to Stack
 // Function:    A -> stack
-uint8_t olc6502::PHA()
+uint8_t cpu8085::PHA()
 {
 	write(0x0100 + stkp, a);
 	stkp--;
@@ -1163,7 +1155,7 @@ uint8_t olc6502::PHA()
 // Instruction: Push Status Register to Stack
 // Function:    status -> stack
 // Note:        Break flag is set to 1 before push
-uint8_t olc6502::PHP()
+uint8_t cpu8085::PHP()
 {
 	write(0x0100 + stkp, status | B | U);
 	SetFlag(B, 0);
@@ -1176,7 +1168,7 @@ uint8_t olc6502::PHP()
 // Instruction: Pop Accumulator off Stack
 // Function:    A <- stack
 // Flags Out:   N, Z
-uint8_t olc6502::PLA()
+uint8_t cpu8085::PLA()
 {
 	stkp++;
 	a = read(0x0100 + stkp);
@@ -1188,7 +1180,7 @@ uint8_t olc6502::PLA()
 
 // Instruction: Pop Status Register off Stack
 // Function:    Status <- stack
-uint8_t olc6502::PLP()
+uint8_t cpu8085::PLP()
 {
 	stkp++;
 	status = read(0x0100 + stkp);
@@ -1196,35 +1188,35 @@ uint8_t olc6502::PLP()
 	return 0;
 }
 
-uint8_t olc6502::ROL()
+uint8_t cpu8085::ROL()
 {
 	fetch();
 	temp = (uint16_t)(fetched << 1) | GetFlag(C);
 	SetFlag(C, temp & 0xFF00);
 	SetFlag(Z, (temp & 0x00FF) == 0x0000);
 	SetFlag(N, temp & 0x0080);
-	if (lookup[opcode].addrmode == &olc6502::IMP)
+	if (lookup[opcode].addrmode == &cpu8085::IMP)
 		a = temp & 0x00FF;
 	else
 		write(addr_abs, temp & 0x00FF);
 	return 0;
 }
 
-uint8_t olc6502::ROR()
+uint8_t cpu8085::ROR()
 {
 	fetch();
 	temp = (uint16_t)(GetFlag(C) << 7) | (fetched >> 1);
 	SetFlag(C, fetched & 0x01);
 	SetFlag(Z, (temp & 0x00FF) == 0x00);
 	SetFlag(N, temp & 0x0080);
-	if (lookup[opcode].addrmode == &olc6502::IMP)
+	if (lookup[opcode].addrmode == &cpu8085::IMP)
 		a = temp & 0x00FF;
 	else
 		write(addr_abs, temp & 0x00FF);
 	return 0;
 }
 
-uint8_t olc6502::RTI()
+uint8_t cpu8085::RTI()
 {
 	stkp++;
 	status = read(0x0100 + stkp);
@@ -1238,7 +1230,7 @@ uint8_t olc6502::RTI()
 	return 0;
 }
 
-uint8_t olc6502::RTS()
+uint8_t cpu8085::RTS()
 {
 	stkp++;
 	pc = (uint16_t)read(0x0100 + stkp);
@@ -1254,7 +1246,7 @@ uint8_t olc6502::RTS()
 
 // Instruction: Set Carry Flag
 // Function:    C = 1
-uint8_t olc6502::SEC()
+uint8_t cpu8085::SEC()
 {
 	SetFlag(C, true);
 	return 0;
@@ -1263,7 +1255,7 @@ uint8_t olc6502::SEC()
 
 // Instruction: Set Decimal Flag
 // Function:    D = 1
-uint8_t olc6502::SED()
+uint8_t cpu8085::SED()
 {
 	SetFlag(D, true);
 	return 0;
@@ -1272,7 +1264,7 @@ uint8_t olc6502::SED()
 
 // Instruction: Set Interrupt Flag / Enable Interrupts
 // Function:    I = 1
-uint8_t olc6502::SEI()
+uint8_t cpu8085::SEI()
 {
 	SetFlag(I, true);
 	return 0;
@@ -1281,7 +1273,7 @@ uint8_t olc6502::SEI()
 
 // Instruction: Store Accumulator at Address
 // Function:    M = A
-uint8_t olc6502::STA()
+uint8_t cpu8085::STA()
 {
 	write(addr_abs, a);
 	return 0;
@@ -1290,7 +1282,7 @@ uint8_t olc6502::STA()
 
 // Instruction: Store X Register at Address
 // Function:    M = X
-uint8_t olc6502::STX()
+uint8_t cpu8085::STX()
 {
 	write(addr_abs, x);
 	return 0;
@@ -1299,7 +1291,7 @@ uint8_t olc6502::STX()
 
 // Instruction: Store Y Register at Address
 // Function:    M = Y
-uint8_t olc6502::STY()
+uint8_t cpu8085::STY()
 {
 	write(addr_abs, y);
 	return 0;
@@ -1309,7 +1301,7 @@ uint8_t olc6502::STY()
 // Instruction: Transfer Accumulator to X Register
 // Function:    X = A
 // Flags Out:   N, Z
-uint8_t olc6502::TAX()
+uint8_t cpu8085::TAX()
 {
 	x = a;
 	SetFlag(Z, x == 0x00);
@@ -1321,7 +1313,7 @@ uint8_t olc6502::TAX()
 // Instruction: Transfer Accumulator to Y Register
 // Function:    Y = A
 // Flags Out:   N, Z
-uint8_t olc6502::TAY()
+uint8_t cpu8085::TAY()
 {
 	y = a;
 	SetFlag(Z, y == 0x00);
@@ -1333,7 +1325,7 @@ uint8_t olc6502::TAY()
 // Instruction: Transfer Stack Pointer to X Register
 // Function:    X = stack pointer
 // Flags Out:   N, Z
-uint8_t olc6502::TSX()
+uint8_t cpu8085::TSX()
 {
 	x = stkp;
 	SetFlag(Z, x == 0x00);
@@ -1345,7 +1337,7 @@ uint8_t olc6502::TSX()
 // Instruction: Transfer X Register to Accumulator
 // Function:    A = X
 // Flags Out:   N, Z
-uint8_t olc6502::TXA()
+uint8_t cpu8085::TXA()
 {
 	a = x;
 	SetFlag(Z, a == 0x00);
@@ -1356,7 +1348,7 @@ uint8_t olc6502::TXA()
 
 // Instruction: Transfer X Register to Stack Pointer
 // Function:    stack pointer = X
-uint8_t olc6502::TXS()
+uint8_t cpu8085::TXS()
 {
 	stkp = x;
 	return 0;
@@ -1366,7 +1358,7 @@ uint8_t olc6502::TXS()
 // Instruction: Transfer Y Register to Accumulator
 // Function:    A = Y
 // Flags Out:   N, Z
-uint8_t olc6502::TYA()
+uint8_t cpu8085::TYA()
 {
 	a = y;
 	SetFlag(Z, a == 0x00);
@@ -1376,7 +1368,7 @@ uint8_t olc6502::TYA()
 
 
 // This function captures illegal opcodes
-uint8_t olc6502::XXX()
+uint8_t cpu8085::XXX()
 {
 	return 0;
 }
@@ -1388,7 +1380,7 @@ uint8_t olc6502::XXX()
 ///////////////////////////////////////////////////////////////////////////////
 // HELPER FUNCTIONS
 
-bool olc6502::complete()
+bool cpu8085::complete()
 {
 	return cycles == 0;
 }
@@ -1397,7 +1389,7 @@ bool olc6502::complete()
 // It is merely a convenience function to turn the binary instruction code into
 // human readable form. Its included as part of the emulator because it can take
 // advantage of many of the CPUs internal operations to do this.
-std::map<uint16_t, std::string> olc6502::disassemble(uint16_t nStart, uint16_t nStop)
+std::map<uint16_t, std::string> cpu8085::disassemble(uint16_t nStart, uint16_t nStop)
 {
 	uint32_t addr = nStart;
 	uint8_t value = 0x00, lo = 0x00, hi = 0x00;
@@ -1427,8 +1419,8 @@ std::map<uint16_t, std::string> olc6502::disassemble(uint16_t nStart, uint16_t n
 	{
 		line_addr = addr;
 
-		// Prefix line with instruction address
-		std::string sInst = "$" + hex(addr, 4) + ": ";
+		// Prefix line with instruction address (eg $8000 :)// in hex
+		std::string sInst = "$" + hex(addr, 4) + ": "; // 4 size of string(hex)
 
 		// Read instruction, and get its readable name
 		uint8_t opcode = bus->read(addr, true); addr++;
@@ -1437,72 +1429,72 @@ std::map<uint16_t, std::string> olc6502::disassemble(uint16_t nStart, uint16_t n
 		// Get oprands from desired locations, and form the
 		// instruction based upon its addressing mode. These
 		// routines mimmick the actual fetch routine of the
-		// 6502 in order to get accurate data as part of the
+		// 8085 in order to get accurate data as part of the
 		// instruction
-		if (lookup[opcode].addrmode == &olc6502::IMP)
+		if (lookup[opcode].addrmode == &cpu8085::IMP)
 		{
 			sInst += " {IMP}";
 		}
-		else if (lookup[opcode].addrmode == &olc6502::IMM)
+		else if (lookup[opcode].addrmode == &cpu8085::IMM)
 		{
 			value = bus->read(addr, true); addr++;
 			sInst += "#$" + hex(value, 2) + " {IMM}";
 		}
-		else if (lookup[opcode].addrmode == &olc6502::ZP0)
+		else if (lookup[opcode].addrmode == &cpu8085::ZP0)
 		{
 			lo = bus->read(addr, true); addr++;
 			hi = 0x00;												
 			sInst += "$" + hex(lo, 2) + " {ZP0}";
 		}
-		else if (lookup[opcode].addrmode == &olc6502::ZPX)
+		else if (lookup[opcode].addrmode == &cpu8085::ZPX)
 		{
 			lo = bus->read(addr, true); addr++;
 			hi = 0x00;														
 			sInst += "$" + hex(lo, 2) + ", X {ZPX}";
 		}
-		else if (lookup[opcode].addrmode == &olc6502::ZPY)
+		else if (lookup[opcode].addrmode == &cpu8085::ZPY)
 		{
 			lo = bus->read(addr, true); addr++;
 			hi = 0x00;														
 			sInst += "$" + hex(lo, 2) + ", Y {ZPY}";
 		}
-		else if (lookup[opcode].addrmode == &olc6502::IZX)
+		else if (lookup[opcode].addrmode == &cpu8085::IZX)
 		{
 			lo = bus->read(addr, true); addr++;
 			hi = 0x00;								
 			sInst += "($" + hex(lo, 2) + ", X) {IZX}";
 		}
-		else if (lookup[opcode].addrmode == &olc6502::IZY)
+		else if (lookup[opcode].addrmode == &cpu8085::IZY)
 		{
 			lo = bus->read(addr, true); addr++;
 			hi = 0x00;								
 			sInst += "($" + hex(lo, 2) + "), Y {IZY}";
 		}
-		else if (lookup[opcode].addrmode == &olc6502::ABS)
+		else if (lookup[opcode].addrmode == &cpu8085::ABS)
 		{
 			lo = bus->read(addr, true); addr++;
 			hi = bus->read(addr, true); addr++;
 			sInst += "$" + hex((uint16_t)(hi << 8) | lo, 4) + " {ABS}";
 		}
-		else if (lookup[opcode].addrmode == &olc6502::ABX)
+		else if (lookup[opcode].addrmode == &cpu8085::ABX)
 		{
 			lo = bus->read(addr, true); addr++;
 			hi = bus->read(addr, true); addr++;
 			sInst += "$" + hex((uint16_t)(hi << 8) | lo, 4) + ", X {ABX}";
 		}
-		else if (lookup[opcode].addrmode == &olc6502::ABY)
+		else if (lookup[opcode].addrmode == &cpu8085::ABY)
 		{
 			lo = bus->read(addr, true); addr++;
 			hi = bus->read(addr, true); addr++;
 			sInst += "$" + hex((uint16_t)(hi << 8) | lo, 4) + ", Y {ABY}";
 		}
-		else if (lookup[opcode].addrmode == &olc6502::IND)
+		else if (lookup[opcode].addrmode == &cpu8085::IND)
 		{
 			lo = bus->read(addr, true); addr++;
 			hi = bus->read(addr, true); addr++;
 			sInst += "($" + hex((uint16_t)(hi << 8) | lo, 4) + ") {IND}";
 		}
-		else if (lookup[opcode].addrmode == &olc6502::REL)
+		else if (lookup[opcode].addrmode == &cpu8085::REL)
 		{
 			value = bus->read(addr, true); addr++;
 			sInst += "$" + hex(value, 2) + " [$" + hex(addr + value, 4) + "] {REL}";

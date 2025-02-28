@@ -1,7 +1,5 @@
 #include "Bus.h"
 
-
-
 Bus::Bus()
 {
 	// Connect CPU to communication bus
