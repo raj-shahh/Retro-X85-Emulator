@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <array>
 
-#include "olc6502.h"
+#include "olc6502.h" // full definition of cpu as bus needs cpu object[data member]
 
 class Bus
 {
