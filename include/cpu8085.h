@@ -6,17 +6,7 @@
 #include <string>
 #include <map>
 
-// Emulation Behaviour Logging ======================================
-// Uncomment this to create a logfile entry for each clock tick of 
-// the CPU. Beware: this slows down emulation considerably and
-// generates extremely large files. I recommend "glogg" to view the
-// data as it is designed to handle enormous files.
-//
-//#define LOGMODE // <- Uncomment me to enable logging!
 
-#ifdef LOGMODE
-#include <stdio.h>
-#endif
 
 // Forward declaration of generic communications bus class to
 // prevent circular inclusions(
@@ -36,45 +26,39 @@ public:
 	~cpu8085();
 
 public:
-	// CPU Core registers, exposed as public here for ease of access from external
-	// examinors. 
-	uint8_t  a      = 0x00;		// Accumulator Register
-	uint8_t  x      = 0x00;		// X Register
-	uint8_t  y      = 0x00;		// Y Register
-	uint8_t  stkp   = 0x00;		// Stack Pointer (points to location on bus)
+	// CPU Core registers,
+	uint8_t  a      = 0x00;		// A Accumulator Register
+	uint8_t  b      = 0x00;		// B Register  (B-C) pair
+	uint8_t  c      = 0x00;		// C Register
+	uint8_t  d      = 0x00;		// D Register  (D-E) pair
+	uint8_t  e      = 0x00;		// E Register	
+	uint8_t  h      = 0x00;		// H Register  (H-L) pair
+	uint8_t  l      = 0x00;		// L Register
+	uint8_t  status = 0x00;		// Status Register [F] flag
+	uint16_t stkp   = 0x0000;	// Stack Pointer
 	uint16_t pc     = 0x0000;	// Program Counter
-	uint8_t  status = 0x00;		// Status Register
 	
-	// External event functions. In hardware these represent pins that are asserted
-	// to produce a change in state.
+	
+
 	void reset();	// Reset Interrupt - Forces CPU into known state
-	void irq();		// Interrupt Request - Executes an instruction at a specific location
-	void nmi();		// Non-Maskable Interrupt Request - As above, but cannot be disabled
 	void clock();	// Perform one clock cycle's worth of update
 
-	// Indicates the current instruction has completed by returning true. This is
-	// a utility function to enable "step-by-step" execution, without manually 
-	// clocking every cycle
+	// Indicates the current instruction has completed by returning true
 	bool complete();
 
 	// Link this CPU to a communications bus
 	void ConnectBus(Bus * busptr) { bus = busptr; }
 
-	// Produces a map of strings, with keys equivalent to instruction start locations
-	// in memory, for the specified address range
 	std::map<uint16_t, std::string> disassemble(uint16_t nStart, uint16_t nStop);
 
 	// The status register stores 8 flags.
 	enum FLAGS8085
 	{
 		C = (1 << 0),	// Carry Bit
-		Z = (1 << 1),	// Zero
-		I = (1 << 2),	// Disable Interrupts
-		D = (1 << 3),	// Decimal Mode (unused in this implementation)
-		B = (1 << 4),	// Break
-		U = (1 << 5),	// Unused
-		V = (1 << 6),	// Overflow
-		N = (1 << 7),	// Negative
+		P = (1 << 2),	// Parity
+		A = (1 << 4),	// Auxillary Carry
+		Z = (1 << 6),	// Zero
+		S = (1 << 7),	// Sign
 	};
 
 private:
@@ -83,10 +67,9 @@ private:
 	void    SetFlag(FLAGS8085 f, bool v);
 	
 	// Assisstive variables to facilitate emulation
-	uint8_t  fetched     = 0x00;   // Represents the working input value to the ALU
-	uint16_t temp        = 0x0000; // A convenience variable used everywhere
-	uint16_t addr_abs    = 0x0000; // All used memory addresses end up in here
-	uint16_t addr_rel    = 0x00;   // Represents absolute address following a branch
+	uint8_t  fetched_low     = 0x00;   // MVI C 15 => fectched_low =15
+	uint8_t  fetched_high    = 0x00; // LXI B 1000 => fetched_low = 00 ; fetched_high= 10
+	uint16_t addr_abs    = 0x0000; // LDA 1000h => addr_abs =1000
 	uint8_t  opcode      = 0x00;   // Is the instruction byte
 	uint8_t  cycles      = 0;	   // Counts how many cycles the instruction has remaining
 	uint32_t clock_count = 0;	   // A global accumulation of the number of clocks
@@ -96,10 +79,6 @@ private:
 	uint8_t read(uint16_t a);
 	void    write(uint16_t a, uint8_t d);
 
-	// The read location of data can come from two sources, a memory address, or
-	// its immediately available as part of the instruction. This function decides
-	// depending on address mode of instruction byte
-	uint8_t fetch();
 
 	// Each table(lookup -vector) entry holds:
 	//	Pneumonic : A textual representation of the instruction (used for disassembly)
@@ -121,39 +100,26 @@ private:
 	
 private: 
 	// Addressing Modes =============================================
+	// Manipulates fetched_low(data), fetched_high(data) and addr_abs(address) variables
 
-	uint8_t IMP();	uint8_t IMM();	
-	uint8_t ZP0();	uint8_t ZPX();	
-	uint8_t ZPY();	uint8_t REL();
-	uint8_t ABS();	uint8_t ABX();	
-	uint8_t ABY();	uint8_t IND();	
-	uint8_t IZX();	uint8_t IZY();
+	uint8_t IMD_8();  // immediate data 8 bit Eg: MVI C 15h => fetched_low =15 (used by MVI_C())
+	uint8_t IMD_16(); // immediate data 16 bit Eg: LXI B 1000h => fetched_low = 00 , fetched_high =10;
+	uint8_t IMA(); //immediate address Eg : LDA 1000h => addr_abs = 1000h
+
+	// for rest addressing modes concern register call XXX() and handle main logic in the instruction itself
 
 private: 
 	// Opcodes ===================INstructions===================================
 
-	uint8_t ADC();	uint8_t AND();	uint8_t ASL();	uint8_t BCC();
-	uint8_t BCS();	uint8_t BEQ();	uint8_t BIT();	uint8_t BMI();
-	uint8_t BNE();	uint8_t BPL();	uint8_t BRK();	uint8_t BVC();
-	uint8_t BVS();	uint8_t CLC();	uint8_t CLD();	uint8_t CLI();
-	uint8_t CLV();	uint8_t CMP();	uint8_t CPX();	uint8_t CPY();
-	uint8_t DEC();	uint8_t DEX();	uint8_t DEY();	uint8_t EOR();
-	uint8_t INC();	uint8_t INX();	uint8_t INY();	uint8_t JMP();
-	uint8_t JSR();	uint8_t LDA();	uint8_t LDX();	uint8_t LDY();
-	uint8_t LSR();	uint8_t NOP();	uint8_t ORA();	uint8_t PHA();
-	uint8_t PHP();	uint8_t PLA();	uint8_t PLP();	uint8_t ROL();
-	uint8_t ROR();	uint8_t RTI();	uint8_t RTS();	uint8_t SBC();
-	uint8_t SEC();	uint8_t SED();	uint8_t SEI();	uint8_t STA();
-	uint8_t STX();	uint8_t STY();	uint8_t TAX();	uint8_t TAY();
-	uint8_t TSX();	uint8_t TXA();	uint8_t TXS();	uint8_t TYA();
+	// All return type uint8_t
 
-	// I capture all "unofficial" opcodes with this function. It is
-	// functionally identical to a NOP
-	uint8_t XXX();
+	uint8_t NOP();// opcode 00
+	uint8_t LXI_B();// opcode 01...
 
-#ifdef LOGMODE
-private:
-	FILE* logfile = nullptr;
-#endif
+	//capture illegal opcode and Dummy addressing Modes
+	uint8_t XXX(){
+		return 0;
+	}
+
 };
 

@@ -47,19 +47,20 @@ public:
 	{
 		//std::string status = "STATUS: ";
 		DrawString(x , y , "STATUS:", olc::WHITE);
-		DrawString(x  + 64, y, "N", emu_bus.cpu.status & cpu8085::N ? olc::GREEN : olc::RED);
-		DrawString(x  + 80, y , "V", emu_bus.cpu.status & cpu8085::V ? olc::GREEN : olc::RED);
-		DrawString(x  + 96, y , "-", emu_bus.cpu.status & cpu8085::U ? olc::GREEN : olc::RED);
-		DrawString(x  + 112, y , "B", emu_bus.cpu.status & cpu8085::B ? olc::GREEN : olc::RED);
-		DrawString(x  + 128, y , "D", emu_bus.cpu.status & cpu8085::D ? olc::GREEN : olc::RED);
-		DrawString(x  + 144, y , "I", emu_bus.cpu.status & cpu8085::I ? olc::GREEN : olc::RED);
-		DrawString(x  + 160, y , "Z", emu_bus.cpu.status & cpu8085::Z ? olc::GREEN : olc::RED);
-		DrawString(x  + 178, y , "C", emu_bus.cpu.status & cpu8085::C ? olc::GREEN : olc::RED);
+		DrawString(x  + 64, y, "C", emu_bus.cpu.status & cpu8085::C ? olc::GREEN : olc::RED);
+		DrawString(x  + 80, y , "P", emu_bus.cpu.status & cpu8085::P ? olc::GREEN : olc::RED);
+		DrawString(x  + 96, y , "AC", emu_bus.cpu.status & cpu8085::A ? olc::GREEN : olc::RED);
+		DrawString(x  + 112, y , "Z", emu_bus.cpu.status & cpu8085::Z ? olc::GREEN : olc::RED);
+		DrawString(x  + 128, y , "S", emu_bus.cpu.status & cpu8085::S ? olc::GREEN : olc::RED);
 		DrawString(x , y + 10, "PC: $" + hex(emu_bus.cpu.pc, 4));
-		DrawString(x , y + 20, "A: $" +  hex(emu_bus.cpu.a, 2) + "  [" + std::to_string(emu_bus.cpu.a) + "]");
-		DrawString(x , y + 30, "X: $" +  hex(emu_bus.cpu.x, 2) + "  [" + std::to_string(emu_bus.cpu.x) + "]");
-		DrawString(x , y + 40, "Y: $" +  hex(emu_bus.cpu.y, 2) + "  [" + std::to_string(emu_bus.cpu.y) + "]");
-		DrawString(x , y + 50, "Stack P: $" + hex(emu_bus.cpu.stkp, 4));
+		DrawString(x , y + 20, "Stack P: $" + hex(emu_bus.cpu.stkp, 4));
+		DrawString(x , y + 30, "A: $" +  hex(emu_bus.cpu.a, 2) + "  [" + std::to_string(emu_bus.cpu.a) + "]");
+		DrawString(x , y + 40, "B: $" +  hex(emu_bus.cpu.b, 2) + "  [" + std::to_string(emu_bus.cpu.b) + "]");
+		DrawString(x , y + 50, "C: $" +  hex(emu_bus.cpu.c, 2) + "  [" + std::to_string(emu_bus.cpu.c) + "]");
+		DrawString(x , y + 60, "D: $" +  hex(emu_bus.cpu.d, 2) + "  [" + std::to_string(emu_bus.cpu.d) + "]");
+		DrawString(x , y + 70, "E: $" +  hex(emu_bus.cpu.e, 2) + "  [" + std::to_string(emu_bus.cpu.e) + "]");
+		DrawString(x , y + 80, "H: $" +  hex(emu_bus.cpu.h, 2) + "  [" + std::to_string(emu_bus.cpu.h) + "]");
+		DrawString(x , y + 90, "L: $" +  hex(emu_bus.cpu.l, 2) + "  [" + std::to_string(emu_bus.cpu.l) + "]");
 	}
 
 	void DrawCode(int x, int y, int nLiemu_bus)
@@ -124,7 +125,7 @@ public:
 		{
 			std::string b;
 			ss >> b;
-			emu_bus.ram[nOffset++] = (uint8_t)std::stoul(b, nullptr, 16); // store in Ram
+			emu_bus.ram[nOffset++] = (uint8_t)std::stoul(b, nullptr, 16); // store in Ram (stoul ==> string to unsigned long)
 		}
 
 		// Set Reset Vector
@@ -137,7 +138,7 @@ public:
 		mapAsm = emu_bus.cpu.disassemble(0x0000, 0xFFFF);
 
 		// Reset
-		emu_bus.cpu.reset();
+		//emu_bus.cpu.reset();
 		return true;
 	}
 
@@ -156,13 +157,13 @@ public:
 		}
 
 		if (GetKey(olc::Key::R).bPressed)
-			emu_bus.cpu.reset();
+			//emu_bus.cpu.reset();
 
 		if (GetKey(olc::Key::I).bPressed)
-			emu_bus.cpu.irq();
+			//emu_bus.cpu.irq();
 
 		if (GetKey(olc::Key::N).bPressed)
-			emu_bus.cpu.nmi();
+			//emu_bus.cpu.nmi();
 
 		/*
 		16 col => Each col has 1 byte (8 bit) of data corresponding to 1 address(16 bit)
