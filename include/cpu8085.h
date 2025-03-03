@@ -6,13 +6,9 @@
 #include <map>
 
 
-// Forward declaration of generic communications bus class to
-// prevent circular inclusions(
-/*
-Cpu needs Bus * ; Forwd declare class Bus;
-Bus needs Cpu obj: #include cpu.h (full definition)
-*/
-
+// Forward declaration of generic communications bus class to prevent circular inclusions
+//Cpu needs Bus * ; Forwd declare class Bus;
+//Bus needs Cpu obj: #include cpu.h (full definition)
 class Bus;
 
 
@@ -106,6 +102,8 @@ private:
 
     void SetFlag(FLAGS8085 f, bool v);
 
+    uint8_t cpu8085::RST_helper(uint8_t n);
+
 private:
     // Addressing Modes =============================================
     // Manipulates fetched_low(data), fetched_high(data) and addr_abs(address) variables
@@ -119,7 +117,7 @@ private:
 private:
     // Opcodes ===================INstructions===================================
 
-    // All return type uint8_t
+    // All return type uint8_t [extra cycles required]
 
     uint8_t NOP();      // opcode 00
     uint8_t LXI_B();    // opcode 01
