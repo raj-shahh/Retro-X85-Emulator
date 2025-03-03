@@ -23,7 +23,7 @@ public:
 
     ~cpu8085();
 
-public:
+public:  // Public Data Members ...........
     // CPU Core registers,
     uint8_t a = 0x00; // A Accumulator Register
     uint8_t b = 0x00; // B Register  (B-C) pair
@@ -36,18 +36,6 @@ public:
     uint16_t stkp = 0x0000; // Stack Pointer
     uint16_t pc = 0x0000; // Program Counter
 
-
-    void reset(); // Reset Interrupt - Forces CPU into known state
-    void clock(); // Perform one clock cycle's worth of update
-
-    // Indicates the current instruction has completed by returning true
-    bool complete();
-
-    // Link this CPU to a communications bus
-    void ConnectBus(Bus *busptr) { bus = busptr; }
-
-    std::map<uint16_t, std::string> disassemble(uint16_t nStart, uint16_t nStop);
-
     // The status register stores 8 flags.
     enum FLAGS8085 {
         C = (1 << 0), // Carry Bit
@@ -57,11 +45,23 @@ public:
         S = (1 << 7), // Sign
     };
 
-private:
-    // Convenience functions to access status register
-    uint8_t GetFlag(FLAGS8085 f);
+public: // Member functions
+    // User Side Interface ...
 
-    void SetFlag(FLAGS8085 f, bool v);
+    void reset(); // Reset Interrupt - Forces CPU into known state
+    void clock(); // Perform one clock cycle's worth of update
+
+    // Indicates the current instruction has completed by returning true
+    bool complete();
+
+    // Link this CPU to a communications bus
+    void ConnectBus(Bus *busptr);
+
+    std::map<uint16_t, std::string> disassemble(uint16_t nStart, uint16_t nStop);
+
+
+private:
+    ////////////  Pvt Data Members /////////////////////////
 
     // Assisstive variables to facilitate emulation
     uint8_t fetched_low = 0x00; // MVI C 15 => fectched_low =15
@@ -73,11 +73,6 @@ private:
 
     // Linkage to the communications bus
     Bus *bus = nullptr;
-
-    uint8_t read(uint16_t a);
-
-    void write(uint16_t a, uint8_t d);
-
 
     // Each table(lookup -vector) entry holds:
     //	Pneumonic : A textual representation of the instruction (used for disassembly)
@@ -98,6 +93,18 @@ private:
     };
 
     std::vector<INSTRUCTION> lookup;
+
+private:
+    //Utiltiy Functions .......................
+
+    uint8_t read(uint16_t a);
+
+    void write(uint16_t a, uint8_t d);
+
+    // Convenience functions to access status register
+    uint8_t GetFlag(FLAGS8085 f);
+
+    void SetFlag(FLAGS8085 f, bool v);
 
 private:
     // Addressing Modes =============================================

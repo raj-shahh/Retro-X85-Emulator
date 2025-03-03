@@ -7,8 +7,8 @@ LDFLAGS := -lX11 -lGL -lpthread -lpng -lstdc++fs
 SRC_DIR := src
 BUILD_DIR := build
 
-# Find all .cpp files
-SRCS := $(wildcard $(SRC_DIR)/*.cpp)
+# Find all .cpp files recursively
+SRCS := $(shell find $(SRC_DIR) -type f -name "*.cpp")
 OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRCS))
 
 # Target executable
@@ -32,7 +32,7 @@ $(TARGET): $(OBJS)
 
 # Compile source files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
-	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 # Create build directory if not exists
