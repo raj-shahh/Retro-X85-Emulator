@@ -98,7 +98,7 @@ uint8_t cpu8085::MOV_C_B(){
     return 0;
 }
 
-uint8_t cpu8085::MOV_A_C(){
+uint8_t cpu8085::MOV_C_C(){
     c = c ;
     return 0;
 }
