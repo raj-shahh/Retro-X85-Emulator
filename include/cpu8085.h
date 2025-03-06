@@ -131,28 +131,28 @@ private:
     uint8_t NOP();      // opcode 00
     uint8_t LXI_B();    // opcode 01
     uint8_t STAX_B();   // opcode 02
-    uint16_t INX_B();    // opcode 03
+    uint8_t INX_B();    // opcode 03
     uint8_t INR_B();    // opcode 04
     uint8_t DCR_B(); // opcode 05
     uint8_t MVI_B(); // opcode 06
     uint8_t RLC(); // opcode 07
-    uint16_t DAD_B(); // opcode 09
+    uint8_t DAD_B(); // opcode 09
     uint8_t LDAX_B(); // opcode 0A
-    uint16_t DCX_B(); // opcode 0B
+    uint8_t DCX_B(); // opcode 0B
     uint8_t INR_C(); // opcode 0C
     uint8_t DCR_C(); // opcode 0D
     uint8_t MVI_C(); // opcode 0E
     uint8_t RRC(); // opcode 0F
     uint8_t LXI_D(); // opcode 11
     uint8_t STAX_D(); // opcode 12
-    uint16_t INX_D(); // opcode 13
+    uint8_t INX_D(); // opcode 13
     uint8_t INR_D(); // opcode 14
     uint8_t DCR_D(); // opcode 15
     uint8_t MVI_D(); // opcode 16
     uint8_t RAL(); // opcode 17
-    uint16_t DAD_D(); // opcode 19
+    uint8_t DAD_D(); // opcode 19
     uint8_t LDAX_D(); // opcode 1A
-    uint16_t DCX_D(); // opcode 1B
+    uint8_t DCX_D(); // opcode 1B
     uint8_t INR_E(); // opcode 1C
     uint8_t DCR_E(); // opcode 1D
     uint8_t MVI_E(); // opcode 1E
@@ -160,14 +160,14 @@ private:
     uint8_t RIM(); // opcode 20
     uint8_t LXI_H(); // opcode 21
     uint8_t SHLD(); // opcode 22
-    uint16_t INX_H(); // opcode 23
+    uint8_t INX_H(); // opcode 23
     uint8_t INR_H(); // opcode 24
     uint8_t DCR_H(); // opcode 25
     uint8_t MVI_H(); // opcode 26
     uint8_t DAA(); // opcode 27
-    uint16_t DAD_H(); // opcode 29
+    uint8_t DAD_H(); // opcode 29
     uint8_t LHLD(); // opcode 2A
-    uint16_t DCX_H(); // opcode 2B
+    uint8_t DCX_H(); // opcode 2B
     uint8_t INR_L(); // opcode 2C
     uint8_t DCR_L(); // opcode 2D
     uint8_t MVI_L(); // opcode 2E
@@ -175,14 +175,14 @@ private:
     uint8_t SIM(); // opcode 30
     uint8_t LXI_SP(); // opcode 31
     uint8_t STA(); // opcode 32
-    uint16_t INX_SP(); // opcode 33
+    uint8_t INX_SP(); // opcode 33
     uint8_t INR_M(); // opcode 34
     uint8_t DCR_M(); // opcode 35
     uint8_t MVI_M(); // opcode 36
     uint8_t STC(); // opcode 37
-    uint16_t DAD_SP(); // opcode 39
+    uint8_t DAD_SP(); // opcode 39
     uint8_t LDA(); // opcode 3A
-    uint16_t DCX_SP(); // opcode 3B
+    uint8_t DCX_SP(); // opcode 3B
     uint8_t INR_A(); // opcode 3C
     uint8_t DCR_A(); // opcode 3D
     uint8_t MVI_A(); // opcode 3E
