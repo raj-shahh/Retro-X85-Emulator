@@ -7,7 +7,7 @@ uint8_t addSubRegisters(cpu8085 &cpu8085, uint8_t reg2, bool carry = false, bool
     bool auxFlagCond = (cpu8085.a & 0x0F) + (-1)^subtract *(reg2 & 0x0F) + (-1)^subtract *(carry & 0x0F) > 0x0F;
     cpu8085.allSetFlags(tempComputation, auxFlagCond);
     cpu8085.a = tempComputation & 0xFF;
-    return cpu8085.a;
+    return 0;
 }
 
 uint8_t cpu8085::ADD_A(){
@@ -162,32 +162,31 @@ uint8_t cpu8085::SBI() {
     return addSubRegisters(*this, val, GetFlag(FLAGS8085::C), true);
 }
 
-uint16_t DAD(cpu8085& cpu8085, uint16_t regPair){
+uint8_t DAD(cpu8085& cpu8085, uint16_t regPair){
     uint16_t hl = (cpu8085.h << 8) | cpu8085.l;
     uint32_t tempComputation = hl + regPair;
     cpu8085.SetFlag(cpu8085.FLAGS8085::C, tempComputation > 0xFFFF);
     cpu8085.h = (tempComputation >> 8) & 0xFF;
     cpu8085.l = tempComputation & 0xFF;
-    return (cpu8085.h << 8) | cpu8085.l;
+    return 0;
 }
 
-uint16_t cpu8085::DAD_B(){
+uint8_t cpu8085::DAD_B(){
     uint16_t bc = (b << 8) | c;
     return DAD(*this, bc);
 }
 
-uint16_t cpu8085::DAD_D(){
+uint8_t cpu8085::DAD_D(){
     uint16_t de = (d << 8) | e;
     return DAD(*this, de);
 }
 
-uint16_t cpu8085::DAD_H(){
+uint8_t cpu8085::DAD_H(){
     uint16_t hl = (h << 8) | l;
     return DAD(*this, hl);
 }
 
-uint16_t cpu8085::DAD_SP(){
-    uint16_t hl = (h << 8) | l;
+uint8_t cpu8085::DAD_SP(){
     return DAD(*this, stkp);
 }
 

@@ -8,7 +8,7 @@ uint8_t logicalOperationFlagSetter(cpu8085 &cpu8085, uint8_t val, bool cFlag, bo
     cpu8085.SetFlag(cpu8085::P, cpu8085.a % 2 == 0);
     cpu8085.SetFlag(cpu8085::C, cFlag);
     cpu8085.SetFlag(cpu8085::A, aFlag);
-    return cpu8085.a;
+    return 0;
 }
 
 uint8_t cpu8085::ANA_A(){
@@ -133,47 +133,47 @@ void cmpFlagSetter(cpu8085 &cpu8085, uint8_t val) {
 
 uint8_t cpu8085::CMP_A(){
     cmpFlagSetter(*this, a);
-    return a;
+    return 0;
 }
 
 uint8_t cpu8085::CMP_B(){
     cmpFlagSetter(*this, b);
-    return b;
+    return 0;
 }
 
 uint8_t cpu8085::CMP_C(){
     cmpFlagSetter(*this, c);
-    return c;
+    return 0;
 }
 
 uint8_t cpu8085::CMP_D(){
     cmpFlagSetter(*this, d);
-    return d;
+    return 0;
 }
 
 uint8_t cpu8085::CMP_E(){
     cmpFlagSetter(*this, e);
-    return e;
+    return 0;
 }
 
 uint8_t cpu8085::CMP_H(){
     cmpFlagSetter(*this, h);
-    return h;
+    return 0;
 }
 
 uint8_t cpu8085::CMP_L(){
     cmpFlagSetter(*this, l);
-    return l;
+    return 0;
 }
 
 uint8_t cpu8085::CMP_M(){
     uint16_t addr = (h << 8) | l;
     cmpFlagSetter(*this, read(addr));
-    return read(addr);
+    return 0;
 }
 
 uint8_t cpu8085::CPI() {
     uint8_t val = read(pc++);
     cmpFlagSetter(*this, val);
-    return val;
+    return 0;
 }

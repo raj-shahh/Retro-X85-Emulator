@@ -1,122 +1,126 @@
 #include "cpu8085.h"
 #include "Bus.h"
 
-uint8_t inrDcrReg(cpu8085 &cpu8085, uint8_t reg, bool dcr = false) {
+uint8_t inrDcrReg(cpu8085 &cpu8085, uint8_t& reg, bool dcr = false) {
     bool aux_flag_cond = (reg & 0x0F + ((-1) ^ dcr) & 0x0F) > 0x0F;
     cpu8085.allSetFlags(reg + ((-1) ^ dcr) & 0xFF, aux_flag_cond, false);
     reg = (reg + (dcr ? -1 : 1)) & 0xFF;
-    return reg;
+    return 0;
 }
 
 uint8_t cpu8085::INR_A() {
-    return a = inrDcrReg(*this, a);
+    return inrDcrReg(*this, a);
 }
 
 uint8_t cpu8085::INR_B() {
-    return b = inrDcrReg(*this, b);
+    return inrDcrReg(*this, b);
 }
 
 uint8_t cpu8085::INR_C() {
-    return c = inrDcrReg(*this, c);
+    return inrDcrReg(*this, c);
 }
 
 uint8_t cpu8085::INR_D() {
-    return d = inrDcrReg(*this, d);
+    return inrDcrReg(*this, d);
 }
 
 uint8_t cpu8085::INR_E() {
-    return e = inrDcrReg(*this, e);
+    return inrDcrReg(*this, e);
 }
 
 uint8_t cpu8085::INR_H() {
-    return h = inrDcrReg(*this, h);
+    return inrDcrReg(*this, h);
 }
 
 uint8_t cpu8085::INR_L() {
-    return l = inrDcrReg(*this, l);
+    return inrDcrReg(*this, l);
 }
 
 uint8_t cpu8085::INR_M() {
     uint16_t addr = (h << 8) | l;
-    uint8_t val = inrDcrReg(*this, read(addr));
+    uint8_t val = read(addr);
+    inrDcrReg(*this, val);
     write(addr, val);
     return val;
 }
 
 uint8_t cpu8085::DCR_A() {
-    return a = inrDcrReg(*this, a, true);
+    return inrDcrReg(*this, a, true);
 }
 
 uint8_t cpu8085::DCR_B() {
-    return b = inrDcrReg(*this, b, true);
+    return inrDcrReg(*this, b, true);
 }
 
 uint8_t cpu8085::DCR_C() {
-    return c = inrDcrReg(*this, c, true);
+    return inrDcrReg(*this, c, true);
 }
 
 uint8_t cpu8085::DCR_D() {
-    return d = inrDcrReg(*this, d, true);
+    return inrDcrReg(*this, d, true);
 }
 
 uint8_t cpu8085::DCR_E() {
-    return e = inrDcrReg(*this, e, true);
+    return inrDcrReg(*this, e, true);
 }
 
 uint8_t cpu8085::DCR_H() {
-    return h = inrDcrReg(*this, h, true);
+    return inrDcrReg(*this, h, true);
 }
 
 uint8_t cpu8085::DCR_L() {
-    return l = inrDcrReg(*this, l, true);
+    return inrDcrReg(*this, l, true);
 }
 
 uint8_t cpu8085::DCR_M() {
     uint16_t addr = (h << 8) | l;
-    uint8_t val = inrDcrReg(*this, read(addr), true);
+    uint8_t val = read(addr);
+    inrDcrReg(*this, val, true);
     write(addr, val);
     return val;
 }
 
-uint16_t inxDcxRegPair(uint8_t &reg1, uint8_t &reg2, bool inx = true) {
+uint8_t inxDcxRegPair(uint8_t &reg1, uint8_t &reg2, bool inx = true) {
     uint16_t regPairVal = (reg1 << 8) | reg2;
     regPairVal = regPairVal + (inx ? 1 : -1);
 
     reg1 = (regPairVal >> 8) & 0xFF;
     reg2 = regPairVal & 0xFF;
-    return regPairVal;
+    return 0;
 }
 
-uint16_t cpu8085::INX_B() {
+uint8_t cpu8085::INX_B() {
     return inxDcxRegPair(b, c);
 }
 
-uint16_t cpu8085::DCX_B() {
+uint8_t cpu8085::DCX_B() {
     return inxDcxRegPair(b, c, false);
 }
 
-uint16_t cpu8085::INX_D() {
+uint8_t cpu8085::INX_D() {
     return inxDcxRegPair(b, d);
 }
 
-uint16_t cpu8085::DCX_D() {
+uint8_t cpu8085::DCX_D() {
     return inxDcxRegPair(d, e, false);
 }
 
-uint16_t cpu8085::INX_H() {
+uint8_t cpu8085::INX_H() {
     return inxDcxRegPair(h, l);
 }
 
-uint16_t cpu8085::DCX_H() {
+uint8_t cpu8085::DCX_H() {
     return inxDcxRegPair(h, l, false);
 }
 
-uint16_t cpu8085::INX_SP() {
-    return stkp = stkp + 1;
+uint8_t cpu8085::INX_SP() {
+    stkp = stkp + 1;
+    return 0;
 }
 
-uint16_t cpu8085::DCX_SP() {
-    return stkp = stkp - 1;
+uint8_t cpu8085::DCX_SP() {
+    stkp = stkp - 1;
+    return 0;
 }
 
 uint8_t cpu8085::DAA() {
@@ -135,7 +139,7 @@ uint8_t cpu8085::DAA() {
         a = temp & 0xFF;
     }
 
-    return a;
+    return 0;
 }
 
 uint8_t cpu8085::CMC() {
@@ -150,33 +154,33 @@ uint8_t cpu8085::STC() {
 
 uint8_t cpu8085::CMA() {
     a = ~a;
-    return a;
+    return 0;
 }
 
 uint8_t cpu8085::RLC() {
     bool msb = a & 0x80;
     a = (a << 1) | msb;
     SetFlag(FLAGS8085::C, msb);
-    return a;
+    return 0;
 }
 
 uint8_t cpu8085::RRC() {
     bool lsb = a & 0x01;
     a = (a >> 1) | (lsb << 7);
     SetFlag(FLAGS8085::C, lsb);
-    return a;
+    return 0;
 }
 
 uint8_t cpu8085::RAL() {
     bool msb = a & 0x80;
     a = (a << 1) | GetFlag(FLAGS8085::C);
     SetFlag(FLAGS8085::C, msb);
-    return a;
+    return 0;
 }
 
 uint8_t cpu8085::RAR() {
     bool lsb = a & 0x01;
     a = (a >> 1) | (GetFlag(FLAGS8085::C) << 7);
     SetFlag(FLAGS8085::C, lsb);
-    return a;
+    return 0;
 }
