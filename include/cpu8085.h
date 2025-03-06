@@ -41,6 +41,8 @@ public:  // Public Data Members ...........
         S = (1 << 7), // Sign
     };
 
+    bool stop_exe_flag = false; // set to true only when exe NOP/HLT/RST
+
 public: // Member functions
     // User Side Interface ...
 

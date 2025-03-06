@@ -16,6 +16,7 @@ void cpu8085::reset(uint16_t progStartAddress){
     h = 0x00; // H Register  (H-L) pair
     l = 0x00; // L Register
     status = 0x00; // Status Register [F] flag
+	stop_exe_flag = false;
 
 	// internal variables
 	fetched_low = 0x00; // MVI C 15 => fectched_low =15

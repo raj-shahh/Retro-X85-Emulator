@@ -24,6 +24,7 @@ public:
 	std::string userInput = "";      // Stores user-entered address
 	uint16_t userRamAddress = 0x0000; // Default RAM display address
 	bool firstKeyIgnored = false; // NEW: Track first keypress
+	bool fullExecutionMode = false;
 
 	// Utility function to convert to hex
 	std::string hex(uint32_t n, uint8_t d)
@@ -86,6 +87,8 @@ public:
 
 	void DrawCode(int x, int y, int nLiemu_bus)
 	{
+		// Extract dissassembly
+		mapAsm = emu_bus.cpu.disassemble(0x0000, 0xFFFF);
 		auto it_a = mapAsm.find(emu_bus.cpu.pc);
 		int nLineY = (nLiemu_bus >> 1) * 10 + y;
 		if (it_a != mapAsm.end())
@@ -148,6 +151,16 @@ public:
 	{
 		Clear(olc::BLACK);
 
+		if (fullExecutionMode)
+		{
+			// Run instructions until HALT, NOP, or RST is encountered
+			while (!emu_bus.cpu.stop_exe_flag)
+			{
+				emu_bus.cpu.clock();				
+				if (emu_bus.cpu.complete())
+					break; // HALT, NOP, or RST encountered
+			}
+		}
 
 		if (GetKey(olc::Key::SPACE).bPressed) // if space bar key is pressed
 		{
@@ -163,56 +176,56 @@ public:
 
 	
 		//Taking User Input (Address Memory) for viewing Mem Segment
-	// Start input mode when 'E' is pressed
-    if (GetKey(olc::Key::E).bPressed) {
-        inputMode = true;
-        userInput.clear();
-        firstKeyIgnored = false; // Reset flag
-    }
+		// Start input mode when 'E' is pressed
+		if (GetKey(olc::Key::E).bPressed) {
+			inputMode = true;
+			userInput.clear();
+			firstKeyIgnored = false; // Reset flag
+		}
 
-    // Handle text input
-    if (inputMode)
-    {
-        DrawString(10, 405, "Enter Address: $" + userInput + "_", olc::YELLOW);
+		// Handle text input
+		if (inputMode)
+		{
+			DrawString(10, 405, "Enter Address: $" + userInput + "_", olc::YELLOW);
 
-        for (int k = (int)olc::Key::A; k <= (int)olc::Key::Z; k++)
-        {
-            if (GetKey((olc::Key)k).bPressed) {
-                if (!firstKeyIgnored) {
-                    firstKeyIgnored = true; // Ignore the first keypress (E)
-                    continue;
-                }
-                char keyChar = 'A' + (k - (int)olc::Key::A);
-                userInput += keyChar;
-            }
-        }
+			for (int k = (int)olc::Key::A; k <= (int)olc::Key::Z; k++)
+			{
+				if (GetKey((olc::Key)k).bPressed) {
+					if (!firstKeyIgnored) {
+						firstKeyIgnored = true; // Ignore the first keypress (E)
+						continue;
+					}
+					char keyChar = 'A' + (k - (int)olc::Key::A);
+					userInput += keyChar;
+				}
+			}
 
-        for (int k = (int)olc::Key::K0; k <= (int)olc::Key::K9; k++)
-        {
-            if (GetKey((olc::Key)k).bPressed) {
-                if (!firstKeyIgnored) {
-                    firstKeyIgnored = true;
-                    continue;
-                }
-                char keyChar = '0' + (k - (int)olc::Key::K0);
-                userInput += keyChar;
-            }
-        }
+			for (int k = (int)olc::Key::K0; k <= (int)olc::Key::K9; k++)
+			{
+				if (GetKey((olc::Key)k).bPressed) {
+					if (!firstKeyIgnored) {
+						firstKeyIgnored = true;
+						continue;
+					}
+					char keyChar = '0' + (k - (int)olc::Key::K0);
+					userInput += keyChar;
+				}
+			}
 
-        if (GetKey(olc::Key::BACK).bPressed && !userInput.empty()) {
-            userInput.pop_back();
-        }
+			if (GetKey(olc::Key::BACK).bPressed && !userInput.empty()) {
+				userInput.pop_back();
+			}
 
-        if (GetKey(olc::Key::ENTER).bPressed && !userInput.empty())
-        {
-            try {
-                userRamAddress = static_cast<uint16_t>(std::stoul(userInput, nullptr, 16));
-            } catch (...) {
-                userRamAddress = 0x0000;
-            }
-            inputMode = false;
-        }
-    }
+			if (GetKey(olc::Key::ENTER).bPressed && !userInput.empty())
+			{
+				try {
+					userRamAddress = static_cast<uint16_t>(std::stoul(userInput, nullptr, 16));
+				} catch (...) {
+					userRamAddress = 0x0000;
+				}
+				inputMode = false;
+			}
+		}
 		/*
 		16 col => Each col has 1 byte (8 bit) of data corresponding to 1 address(16 bit)
 		==> 1 st row address displayed = 0000h
@@ -253,8 +266,8 @@ clock() --> executes only 1 instruction
 
 int main(int argc, char* argv[])
 {
-    if (argc != 3) {
-        std::cerr << "Emu Usage: " << argv[0] << " <prog start_address> <filename>" << std::endl;
+    if (argc < 3 || argc > 4) {
+        std::cerr << "Usage: " << argv[0] << " <prog start_address> <filename> [--step_wise/--one_go]\n";
         return 1;
     }
 
@@ -267,6 +280,17 @@ int main(int argc, char* argv[])
 		std::cerr<< "Invalid program Start Address\n";
 		return 1;
 	}
+
+    // Determine execution mode
+    if (argc == 4) {
+        std::string mode = argv[3];
+        if (mode == "--one_go")
+            pge.fullExecutionMode = true;
+        else if (mode != "--step_wise") {
+            std::cerr << "Invalid execution mode. Use '--step_wise' or '--one_go'.\n";
+            return 1;
+        }
+    }
 
 	if(pge.Construct(680, 480, 2, 2))
 		pge.Start();

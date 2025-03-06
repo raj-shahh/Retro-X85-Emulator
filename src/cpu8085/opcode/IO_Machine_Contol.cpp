@@ -79,10 +79,12 @@ uint8_t cpu8085::SPHL(){
 ///////////////////////////// Control ////////////////////
 
 uint8_t cpu8085::NOP(){
+    stop_exe_flag = true;
     return 0;
 }
 
 uint8_t cpu8085::HLT(){
+    stop_exe_flag = true;
     return 0;
 }
 
