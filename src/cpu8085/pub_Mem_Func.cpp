@@ -147,10 +147,7 @@ std::map<uint16_t, std::string> cpu8085::disassemble(uint16_t nStart, uint16_t n
 		{
 			lo = bus->read(addr, true); addr++;
 			hi = bus->read(addr, true); addr++;
-			sInst += "($" + hex((uint16_t)(hi << 8) | lo, 4)+"h";
-		}
-		else{
-			sInst += " {IMP}";
+			sInst += "$" + hex((uint16_t)(hi << 8) | lo, 4)+"h";
 		}
 
 		mapLines[line_addr] = sInst;

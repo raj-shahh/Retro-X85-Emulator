@@ -51,7 +51,7 @@ public:
 		DrawString(x , y , "STATUS:", olc::WHITE);
 		DrawString(x  + 64, y, "C", emu_bus.cpu.status & cpu8085::C ? olc::GREEN : olc::RED);
 		DrawString(x  + 80, y , "P", emu_bus.cpu.status & cpu8085::P ? olc::GREEN : olc::RED);
-		DrawString(x  + 96, y , "AC", emu_bus.cpu.status & cpu8085::A ? olc::GREEN : olc::RED);
+		DrawString(x  + 96, y , "A", emu_bus.cpu.status & cpu8085::A ? olc::GREEN : olc::RED);
 		DrawString(x  + 112, y , "Z", emu_bus.cpu.status & cpu8085::Z ? olc::GREEN : olc::RED);
 		DrawString(x  + 128, y , "S", emu_bus.cpu.status & cpu8085::S ? olc::GREEN : olc::RED);
 		DrawString(x , y + 10, "PC: $" + hex(emu_bus.cpu.pc, 4));
@@ -104,7 +104,7 @@ public:
 		std::ifstream file(progFilePath); // Open the file
 		if (!file.is_open()) {
 			std::cerr << "Error: Could not open file="<<progFilePath<< std::endl;
-			return 1;
+			exit(EXIT_FAILURE);
 		}
 		
 		uint16_t nOffset = progStartAddress; // start address of code
@@ -151,7 +151,7 @@ public:
 		DrawRam(2, 2, 0x0000, 16, 16); // draws start Adress = 0000h and 16 rows and 16 col
 		DrawRam(2, 182, 0x8000, 16, 16); // 1st 2 params (2,182) position on screen where to start draw
 		DrawCpu(448, 2);
-		DrawCode(448, 72, 26);
+		DrawCode(448, 120, 26);
 
 		//IRQ : Interrupt Request  NMI: Non Maskable Interrupt
 		DrawString(10, 370, "SPACE = Step Instruction    R = RESET");
