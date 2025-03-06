@@ -44,7 +44,7 @@ public:  // Public Data Members ...........
 public: // Member functions
     // User Side Interface ...
 
-    void reset(); // Reset Interrupt - Forces CPU into known state
+    void reset(uint16_t progStartAddress); // Reset Interrupt - Forces CPU into known state
     void clock(); // Perform one clock cycle's worth of update
 
     // Indicates the current instruction has completed by returning true
@@ -52,8 +52,6 @@ public: // Member functions
 
     // Link this CPU to a communications bus
     void ConnectBus(Bus *busptr);
-
-    std::map<uint16_t, std::string> disassemble(uint16_t nStart, uint16_t nStop);
 
     // Convenience functions to access status register
     uint8_t GetFlag(FLAGS8085 f);
@@ -68,6 +66,7 @@ public: // Member functions
         SetFlag(FLAGS8085::A, aux_flag_cond);
     }
 
+    std::map<uint16_t, std::string> disassemble(uint16_t nStart, uint16_t nStop);
 
 private:
     ////////////  Pvt Data Members /////////////////////////
@@ -91,15 +90,17 @@ private:
     //	Cycle Count : An integer that represents the base number of clock cycles the
     //				  CPU requires to perform the instruction
 
-    struct INSTRUCTION {
-        std::string name;
+struct INSTRUCTION {
+    std::string name;
+    uint8_t (cpu8085::*operate)(void) = nullptr;
+    uint8_t (cpu8085::*addrmode)(void) = nullptr;
+    uint8_t cycles = 0;
 
-        uint8_t (cpu8085::*operate)(void) = nullptr;
+    // Constructor for easy initialization
+    INSTRUCTION(const std::string& n, uint8_t (cpu8085::*op)(), uint8_t (cpu8085::*m)(), uint8_t c)
+        : name(n), operate(op), addrmode(m), cycles(c) {}
+};
 
-        uint8_t (cpu8085::*addrmode)(void) = nullptr;
-
-        uint8_t cycles = 0;
-    };
 
     std::vector<INSTRUCTION> lookup;
 
@@ -110,9 +111,7 @@ private:
 
     void write(uint16_t a, uint8_t d);
 
-
-
-    uint8_t cpu8085::RST_helper(uint8_t n);
+    uint8_t RST_helper(uint8_t n);
 
 private:
     // Addressing Modes =============================================
