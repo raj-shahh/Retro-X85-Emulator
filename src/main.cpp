@@ -19,7 +19,7 @@ public:
 	std::map<uint16_t, std::string> mapAsm; // map assembly
 	uint16_t progStartAddress;
 	std::string progFilePath;
-
+	uint16_t y_offset = 50; 
 	bool inputMode = false;          // Flag to check if input mode is active
 	std::string userInput = "";      // Stores user-entered address
 	uint16_t userRamAddress = 0x0000; // Default RAM display address
@@ -42,42 +42,46 @@ public:
 
 		for (int row = 0; row < nRows; row++)
 		{
-			if(flag) break;
-			std::string sOffset = "$" + hex(nAddr, 4) + ":";		
+			if (flag) break;
+
+			std::string sAddress = "$" + hex(nAddr, 4) + ":"; // Address portion
+			DrawString(nRamX, nRamY, sAddress, olc::CYAN);    // Draw address in cyan
+
+			std::string sData;
 			for (int col = 0; col < nColumns; col++)
 			{
-				sOffset += " " + hex(emu_bus.read(nAddr, true), 2);
-				if(nAddr== maxAddr){
+				sData += " " + hex(emu_bus.read(nAddr, true), 2); // Data portion
+				if (nAddr == maxAddr)
+				{
 					flag = true;
 					break;
 				}
 				nAddr++;
 			}
 
-			DrawString(nRamX, nRamY, sOffset);
+			DrawString(nRamX + 48, nRamY, sData, olc::WHITE); // Draw data in white (offset slightly)
 			nRamY += 10;
 		}
 	}
 
-
 	void DrawCpu(int x, int y)
 	{
 		//std::string status = "STATUS: ";
-		DrawString(x , y , "STATUS:", olc::WHITE);
-		DrawString(x  + 64, y, "C", emu_bus.cpu.status & cpu8085::C ? olc::GREEN : olc::RED);
-		DrawString(x  + 80, y , "P", emu_bus.cpu.status & cpu8085::P ? olc::GREEN : olc::RED);
-		DrawString(x  + 96, y , "A", emu_bus.cpu.status & cpu8085::A ? olc::GREEN : olc::RED);
-		DrawString(x  + 112, y , "Z", emu_bus.cpu.status & cpu8085::Z ? olc::GREEN : olc::RED);
+		DrawString(x , y , "STATUS:", olc::GREY);		
 		DrawString(x  + 128, y , "S", emu_bus.cpu.status & cpu8085::S ? olc::GREEN : olc::RED);
-		DrawString(x , y + 10, "PC: $" + hex(emu_bus.cpu.pc, 4));
-		DrawString(x , y + 20, "Stack P: $" + hex(emu_bus.cpu.stkp, 4));
-		DrawString(x , y + 30, "A: $" +  hex(emu_bus.cpu.a, 2) + "  [" + std::to_string(emu_bus.cpu.a) + "]");
-		DrawString(x , y + 40, "B: $" +  hex(emu_bus.cpu.b, 2) + "  [" + std::to_string(emu_bus.cpu.b) + "]");
-		DrawString(x , y + 50, "C: $" +  hex(emu_bus.cpu.c, 2) + "  [" + std::to_string(emu_bus.cpu.c) + "]");
-		DrawString(x , y + 60, "D: $" +  hex(emu_bus.cpu.d, 2) + "  [" + std::to_string(emu_bus.cpu.d) + "]");
-		DrawString(x , y + 70, "E: $" +  hex(emu_bus.cpu.e, 2) + "  [" + std::to_string(emu_bus.cpu.e) + "]");
-		DrawString(x , y + 80, "H: $" +  hex(emu_bus.cpu.h, 2) + "  [" + std::to_string(emu_bus.cpu.h) + "]");
-		DrawString(x , y + 90, "L: $" +  hex(emu_bus.cpu.l, 2) + "  [" + std::to_string(emu_bus.cpu.l) + "]");
+		DrawString(x  + 112, y , "Z", emu_bus.cpu.status & cpu8085::Z ? olc::GREEN : olc::RED);
+		DrawString(x  + 96, y , "A", emu_bus.cpu.status & cpu8085::A ? olc::GREEN : olc::RED);
+		DrawString(x  + 80, y , "P", emu_bus.cpu.status & cpu8085::P ? olc::GREEN : olc::RED);
+		DrawString(x  + 64, y, "C", emu_bus.cpu.status & cpu8085::C ? olc::GREEN : olc::RED);
+		DrawString(x , y + 10, "PC: $" + hex(emu_bus.cpu.pc, 4),olc::DARK_CYAN);
+		DrawString(x , y + 20, "Stack P: $" + hex(emu_bus.cpu.stkp, 4),olc::DARK_GREEN);
+		DrawString(x , y + 30, "A: $" +  hex(emu_bus.cpu.a, 2) + "  [" + std::to_string(emu_bus.cpu.a) + "]",olc::MAGENTA);
+		DrawString(x , y + 40, "B: $" +  hex(emu_bus.cpu.b, 2) + "  [" + std::to_string(emu_bus.cpu.b) + "]", olc::RED);
+		DrawString(x , y + 50, "C: $" +  hex(emu_bus.cpu.c, 2) + "  [" + std::to_string(emu_bus.cpu.c) + "]",olc::CYAN);
+		DrawString(x , y + 60, "D: $" +  hex(emu_bus.cpu.d, 2) + "  [" + std::to_string(emu_bus.cpu.d) + "]",olc::BLUE);
+		DrawString(x , y + 70, "E: $" +  hex(emu_bus.cpu.e, 2) + "  [" + std::to_string(emu_bus.cpu.e) + "]",olc::YELLOW);
+		DrawString(x , y + 80, "H: $" +  hex(emu_bus.cpu.h, 2) + "  [" + std::to_string(emu_bus.cpu.h) + "]",olc::GREY);
+		DrawString(x , y + 90, "L: $" +  hex(emu_bus.cpu.l, 2) + "  [" + std::to_string(emu_bus.cpu.l) + "]",olc::GREEN);
 	}
 
 	void DrawCode(int x, int y, int nLiemu_bus)
@@ -86,13 +90,13 @@ public:
 		int nLineY = (nLiemu_bus >> 1) * 10 + y;
 		if (it_a != mapAsm.end())
 		{
-			DrawString(x, nLineY, (*it_a).second, olc::CYAN);
+			DrawString(x, nLineY, (*it_a).second, olc::DARK_CYAN);
 			while (nLineY < (nLiemu_bus * 10) + y)
 			{
 				nLineY += 10;
 				if (++it_a != mapAsm.end())
 				{
-					DrawString(x, nLineY, (*it_a).second);
+					DrawString(x, nLineY, (*it_a).second , olc::GREY);
 				}
 			}
 		}
@@ -106,7 +110,7 @@ public:
 				nLineY -= 10;
 				if (--it_a != mapAsm.end())
 				{
-					DrawString(x, nLineY, (*it_a).second);
+					DrawString(x, nLineY, (*it_a).second ,olc::GREY);
 				}
 			}
 		}
@@ -149,7 +153,7 @@ public:
 		{
 			do
 			{
-				emu_bus.cpu.clock();
+				emu_bus.cpu.clock();// actual exe takes place here
 			} 
 			while (!emu_bus.cpu.complete());
 		}
@@ -169,7 +173,7 @@ public:
     // Handle text input
     if (inputMode)
     {
-        DrawString(10, 400, "Enter Address: $" + userInput + "_", olc::YELLOW);
+        DrawString(10, 405, "Enter Address: $" + userInput + "_", olc::YELLOW);
 
         for (int k = (int)olc::Key::A; k <= (int)olc::Key::Z; k++)
         {
@@ -214,20 +218,24 @@ public:
 		==> 1 st row address displayed = 0000h
 		==> 2nd row address displayed = 0010h (10h = 16 in dec)
 		==> 1st row 1st col data is corresponding to address 0001h
-		*/				
-		DrawRam(2, 2, userRamAddress, 16, 16); // draws start Adress = 0000h and 16 rows and 16 col
-		DrawRam(2, 182, progStartAddress, 16, 16); // 1st 2 params (2,182) position on screen where to start draw
-		DrawCpu(448, 2);
-		DrawCode(448, 121, 26);		
-		DrawString(2, 370, "SPACE = Step Instruction	R = RESET	E = Exam Mem");
+		*/
+		DrawString(5,30,"Address Space :- Exam Mem Space(Top)    Prog Space(Bot)",olc::YELLOW);		
+		DrawRam(6, 2+y_offset, userRamAddress, 16, 16); // draws start Adress = 0000h and 16 rows and 16 col
+		DrawRam(6, 182 +y_offset, progStartAddress, 16, 16); // 1st 2 params (2,182) position on screen where to start draw
+		DrawString(463,30,"Registers(Top)     Asm(Bot)",olc::YELLOW);
+		DrawCpu(463, 2+y_offset);
+		DrawCode(463, 121+y_offset, 26);		
+		DrawString(6, 377+y_offset, "SPACE = Step Instruction	R = RESET	E = Exam Mem" ,olc::YELLOW);
 
 		//To make beatiful
 		// Draw borders
-		DrawRect(0, 0, 435, 162, olc::WHITE);  // User Examined RAM
-		DrawRect(0, 180, 435, 162, olc::WHITE); // Program RAM		
-		DrawRect(445, 0, 230, 102, olc::WHITE); // Draw CPU Registers		
-		DrawRect(445, 118, 230, 272, olc::WHITE);// Draw Code Disassembly
-		DrawRect(0, 365, 435, 17, olc::WHITE);
+		DrawRect(4, 0+y_offset, 435, 162, olc::WHITE);  // User Examined RAM
+		DrawRect(4, 180+y_offset, 435, 162, olc::WHITE); // Program RAM		
+		DrawRect(460, 0+y_offset, 215, 102, olc::WHITE); // Draw CPU Registers		
+		DrawRect(460, 118+y_offset, 215, 272, olc::WHITE);// Draw Code Disassembly
+		DrawRect(4, 372+y_offset, 435, 17, olc::WHITE);
+		// Draw a border around the entire window
+		DrawRect(0, 0, ScreenWidth() - 1, ScreenHeight() - 1, olc::WHITE);
 
 		return true;
 	}
