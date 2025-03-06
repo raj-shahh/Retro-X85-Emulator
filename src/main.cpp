@@ -133,7 +133,9 @@ public:
 		std::string line;
 		while (std::getline(file, line)) { // Read each line
 			if (!line.empty()) {
-				emu_bus.ram[nOffset++] = static_cast<uint8_t>(std::stoul(line, nullptr, 16));
+				emu_bus.ram[nOffset] = static_cast<uint8_t>(std::stoul(line, nullptr, 16));
+				if(nOffset == 0xFFFF) break;
+				nOffset++;
 			}
 		}
 
