@@ -41,7 +41,7 @@ uint8_t cpu8085::INR_M() {
     uint8_t val = read(addr);
     inrDcrReg(*this, val);
     write(addr, val);
-    return val;
+    return 0;
 }
 
 uint8_t cpu8085::DCR_A() {
@@ -77,7 +77,7 @@ uint8_t cpu8085::DCR_M() {
     uint8_t val = read(addr);
     inrDcrReg(*this, val, true);
     write(addr, val);
-    return val;
+    return 0;
 }
 
 uint8_t inxDcxRegPair(uint8_t &reg1, uint8_t &reg2, bool inx = true) {
