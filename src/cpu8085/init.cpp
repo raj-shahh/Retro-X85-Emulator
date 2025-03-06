@@ -123,8 +123,8 @@ cpu8085::cpu8085()
 	lookup.push_back(INSTRUCTION("MOV M,E", &cpu8085::MOV_M_E, &cpu8085::XXX,   1 ));
 	lookup.push_back(INSTRUCTION("MOV M,H", &cpu8085::MOV_M_H, &cpu8085::XXX,   1 ));
 	lookup.push_back(INSTRUCTION("MOV M,L", &cpu8085::MOV_M_L, &cpu8085::XXX,   1 ));
+	lookup.push_back(INSTRUCTION("HLT",     &cpu8085::HLT,    &cpu8085::XXX,    1 ));
 	lookup.push_back(INSTRUCTION("MOV M,A", &cpu8085::MOV_M_A, &cpu8085::XXX,   1 ));
-	lookup.push_back(INSTRUCTION("NOP",     &cpu8085::NOP,    &cpu8085::XXX,    1 ));
 	lookup.push_back(INSTRUCTION("MOV A,B", &cpu8085::MOV_A_B, &cpu8085::XXX,   1 ));
 	lookup.push_back(INSTRUCTION("MOV A,C", &cpu8085::MOV_A_C, &cpu8085::XXX,   1 ));
 	lookup.push_back(INSTRUCTION("MOV A,D", &cpu8085::MOV_A_D, &cpu8085::XXX,   1 ));
