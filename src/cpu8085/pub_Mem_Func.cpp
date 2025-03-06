@@ -3,7 +3,27 @@
 #include "Bus.h"
 
 //Forces CPU into known state
-void cpu8085::reset(){
+void cpu8085::reset(uint16_t progStartAddress){
+
+	pc = progStartAddress;
+	stkp = 0xFFFF;
+
+	a = 0x00; // A Accumulator Register
+    b = 0x00; // B Register  (B-C) pair
+    c = 0x00; // C Register
+    d = 0x00; // D Register  (D-E) pair
+    e = 0x00; // E Register
+    h = 0x00; // H Register  (H-L) pair
+    l = 0x00; // L Register
+    status = 0x00; // Status Register [F] flag
+
+	// internal variables
+	fetched_low = 0x00; // MVI C 15 => fectched_low =15
+    fetched_high = 0x00; // LXI B 1000 => fetched_low = 00 ; fetched_high= 10
+    addr_abs = 0x0000; // LDA 1000h => addr_abs =1000
+    opcode = 0x00; // Is the instruction byte
+    cycles = 0; // Counts how many cycles the instruction has remaining
+    clock_count = 0; // A global accumulation of the number of clocks
 
 }
 
@@ -58,11 +78,31 @@ void cpu8085::ConnectBus(Bus *busptr) {
 	bus = busptr; 
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// FLAG FUNCTIONS
+
+// Returns the value of a specific bit of the status register
+uint8_t cpu8085::GetFlag(FLAGS8085 f)
+{
+	return ((status & f) > 0) ? 1 : 0;
+}
+
+// Sets or clears a specific bit of the status register
+void cpu8085::SetFlag(FLAGS8085 f, bool v)
+{
+	if (v)
+		status |= f;
+	else
+		status &= ~f;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
 // This is the disassembly function.
 std::map<uint16_t, std::string> cpu8085::disassemble(uint16_t nStart, uint16_t nStop)
 {
 	uint32_t addr = nStart;
-	uint8_t value = 0x00, lo = 0x00, hi = 0x00;
+	uint8_t  lo = 0x00, hi = 0x00;
 	std::map<uint16_t, std::string> mapLines;
 	uint16_t line_addr = 0;
 
@@ -76,15 +116,10 @@ std::map<uint16_t, std::string> cpu8085::disassemble(uint16_t nStart, uint16_t n
 			s[i] = "0123456789ABCDEF"[n & 0xF];
 		return s;
 	};
-
-	// Starting at the specified address we read an instruction
-	// byte, which in turn yields information from the lookup table
-	// as to how many additional bytes we need to read and what the
-	// addressing mode is. I need this info to assemble human readable
-	// syntax, which is different depending upon the addressing mode
-
-	// As the instruction is decoded, a std::string is assembled
-	// with the readable output
+	/* # means data $ means address
+	mapLines => key = $8000  val = LDA $1000h
+				key = $8003  val = INR A 
+	*/
 	while (addr <= (uint32_t)nStop)
 	{
 		line_addr = addr;
@@ -96,81 +131,28 @@ std::map<uint16_t, std::string> cpu8085::disassemble(uint16_t nStart, uint16_t n
 		uint8_t opcode = bus->read(addr, true); addr++;
 		sInst += lookup[opcode].name + " ";
 
-		/*
-		// Get oprands from desired locations, and form the
-		// instruction based upon its addressing mode. These
-		// routines mimmick the actual fetch routine of the
-		// 8085 in order to get accurate data as part of the
-		// instruction
-		if (lookup[opcode].addrmode == &cpu8085::IMP)
+		// Get oprands from desired locations, and form the instruction based upon its addressing mode. 
+		if (lookup[opcode].addrmode == &cpu8085::IMD_8)
 		{
+			lo = bus->read(addr, true); addr++;
+			sInst += "#" + hex(lo, 2)+"h";			
+		}
+		else if (lookup[opcode].addrmode == &cpu8085::IMD_16)
+		{
+			lo = bus->read(addr, true); addr++;
+			hi = bus->read(addr, true); addr++;
+			sInst += "#" + hex((uint16_t)(hi << 8) | lo, 4)+"h";
+		}
+		else if (lookup[opcode].addrmode == &cpu8085::IMA)
+		{
+			lo = bus->read(addr, true); addr++;
+			hi = bus->read(addr, true); addr++;
+			sInst += "($" + hex((uint16_t)(hi << 8) | lo, 4)+"h";
+		}
+		else{
 			sInst += " {IMP}";
 		}
-		else if (lookup[opcode].addrmode == &cpu8085::IMM)
-		{
-			value = bus->read(addr, true); addr++;
-			sInst += "#$" + hex(value, 2) + " {IMM}";
-		}
-		else if (lookup[opcode].addrmode == &cpu8085::ZP0)
-		{
-			lo = bus->read(addr, true); addr++;
-			hi = 0x00;
-			sInst += "$" + hex(lo, 2) + " {ZP0}";
-		}
-		else if (lookup[opcode].addrmode == &cpu8085::ZPX)
-		{
-			lo = bus->read(addr, true); addr++;
-			hi = 0x00;
-			sInst += "$" + hex(lo, 2) + ", X {ZPX}";
-		}
-		else if (lookup[opcode].addrmode == &cpu8085::ZPY)
-		{
-			lo = bus->read(addr, true); addr++;
-			hi = 0x00;
-			sInst += "$" + hex(lo, 2) + ", Y {ZPY}";
-		}
-		else if (lookup[opcode].addrmode == &cpu8085::IZX)
-		{
-			lo = bus->read(addr, true); addr++;
-			hi = 0x00;
-			sInst += "($" + hex(lo, 2) + ", X) {IZX}";
-		}
-		else if (lookup[opcode].addrmode == &cpu8085::IZY)
-		{
-			lo = bus->read(addr, true); addr++;
-			hi = 0x00;
-			sInst += "($" + hex(lo, 2) + "), Y {IZY}";
-		}
-		else if (lookup[opcode].addrmode == &cpu8085::ABS)
-		{
-			lo = bus->read(addr, true); addr++;
-			hi = bus->read(addr, true); addr++;
-			sInst += "$" + hex((uint16_t)(hi << 8) | lo, 4) + " {ABS}";
-		}
-		else if (lookup[opcode].addrmode == &cpu8085::ABX)
-		{
-			lo = bus->read(addr, true); addr++;
-			hi = bus->read(addr, true); addr++;
-			sInst += "$" + hex((uint16_t)(hi << 8) | lo, 4) + ", X {ABX}";
-		}
-		else if (lookup[opcode].addrmode == &cpu8085::ABY)
-		{
-			lo = bus->read(addr, true); addr++;
-			hi = bus->read(addr, true); addr++;
-			sInst += "$" + hex((uint16_t)(hi << 8) | lo, 4) + ", Y {ABY}";
-		}
-		else if (lookup[opcode].addrmode == &cpu8085::IND)
-		{
-			lo = bus->read(addr, true); addr++;
-			hi = bus->read(addr, true); addr++;
-			sInst += "($" + hex((uint16_t)(hi << 8) | lo, 4) + ") {IND}";
-		}
-		else if (lookup[opcode].addrmode == &cpu8085::REL)
-		{
-			value = bus->read(addr, true); addr++;
-			sInst += "$" + hex(value, 2) + " [$" + hex(addr + value, 4) + "] {REL}";
-		}
-		*/
+
 		mapLines[line_addr] = sInst;
 	}
 

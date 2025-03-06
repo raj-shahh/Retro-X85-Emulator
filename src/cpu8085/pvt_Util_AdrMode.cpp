@@ -17,24 +17,6 @@ void cpu8085::write(uint16_t a, uint8_t d)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// FLAG FUNCTIONS
-
-// Returns the value of a specific bit of the status register
-uint8_t cpu8085::GetFlag(FLAGS8085 f)
-{
-	return ((status & f) > 0) ? 1 : 0;
-}
-
-// Sets or clears a specific bit of the status register
-void cpu8085::SetFlag(FLAGS8085 f, bool v)
-{
-	if (v)
-		status |= f;
-	else
-		status &= ~f;
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // ADDRESSING MODES (when these func are called pc points to addr next to opcode)
 	// return extra cycles
     

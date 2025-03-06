@@ -17,6 +17,8 @@ public:
 
 	Bus emu_bus;
 	std::map<uint16_t, std::string> mapAsm; // map assembly
+	uint16_t progStartAddress;
+	std::string progFilePath;
 
 	// Utility function to convert to hex
 	std::string hex(uint32_t n, uint8_t d)
@@ -97,48 +99,29 @@ public:
 
 	bool OnUserCreate()
 	{
-		// Load Program (assembled at https://www.masswerk.at/6502/assembler.html)
-		/*
-			*=$8000
-			LDX #10
-			STX $0000
-			LDX #3
-			STX $0001
-			LDY $0000
-			LDA #0
-			CLC
-			loop
-			ADC $0001
-			DEY
-			BNE loop
-			STA $0002
-			NOP
-			NOP
-			NOP
-		*/
+
+		// Writing prog in Ram by transfer content from file
+		std::ifstream file(progFilePath); // Open the file
+		if (!file.is_open()) {
+			std::cerr << "Error: Could not open file="<<progFilePath<< std::endl;
+			return 1;
+		}
 		
-		// Convert hex string into bytes for RAM
-		std::stringstream ss;
-		ss << "A2 0A 8E 00 00 A2 03 8E 01 00 AC 00 00 A9 00 18 6D 01 00 88 D0 FA 8D 02 00 EA EA EA";
-		uint16_t nOffset = 0x8000; // start address of code
-		while (!ss.eof())
-		{
-			std::string b;
-			ss >> b;
-			emu_bus.ram[nOffset++] = (uint8_t)std::stoul(b, nullptr, 16); // store in Ram (stoul ==> string to unsigned long)
+		uint16_t nOffset = progStartAddress; // start address of code
+		std::string line;
+		while (std::getline(file, line)) { // Read each line
+			if (!line.empty()) {
+				emu_bus.ram[nOffset++] = static_cast<uint8_t>(std::stoul(line, nullptr, 16));
+			}
 		}
 
-		// Set Reset Vector
-		emu_bus.ram[0xFFFC] = 0x00;
-		emu_bus.ram[0xFFFD] = 0x80;
-
-		// Dont forget to set IRQ and NMI vectors if you want to play with those
+		file.close();
 				
 		// Extract dissassembly
 		mapAsm = emu_bus.cpu.disassemble(0x0000, 0xFFFF);
 
 		// Reset
-		//emu_bus.cpu.reset();
+		emu_bus.cpu.reset(progStartAddress);
 		return true;
 	}
 
@@ -157,13 +140,7 @@ public:
 		}
 
 		if (GetKey(olc::Key::R).bPressed)
-			//emu_bus.cpu.reset();
-
-		if (GetKey(olc::Key::I).bPressed)
-			//emu_bus.cpu.irq();
-
-		if (GetKey(olc::Key::N).bPressed)
-			//emu_bus.cpu.nmi();
+			emu_bus.cpu.reset(progStartAddress);
 
 		/*
 		16 col => Each col has 1 byte (8 bit) of data corresponding to 1 address(16 bit)
@@ -177,7 +154,7 @@ public:
 		DrawCode(448, 72, 26);
 
 		//IRQ : Interrupt Request  NMI: Non Maskable Interrupt
-		DrawString(10, 370, "SPACE = Step Instruction    R = RESET    I = IRQ    N = NMI");
+		DrawString(10, 370, "SPACE = Step Instruction    R = RESET");
 
 		return true;
 	}
@@ -193,9 +170,18 @@ clock() --> executes only 1 instruction
 ** The code to be executed is Stored in Ram [OnUSerCreate (exe Once)]
 */
 
-int main()
+int main(int argc, char* argv[])
 {
+    if (argc != 3) {
+        std::cerr << "Emu Usage: " << argv[0] << " <start_address> <filename>" << std::endl;
+        return 1;
+    }
+
 	Emulate_cpu8085 pge; //pixel game engine
+
+	pge.progFilePath = std::string(argv[2]);
+	pge.progStartAddress = static_cast<uint16_t>(std::stoul(argv[1], nullptr, 16)); 
+
 	if(pge.Construct(680, 480, 2, 2))
 		pge.Start();
 	return 0;
