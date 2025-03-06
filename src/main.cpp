@@ -20,6 +20,11 @@ public:
 	uint16_t progStartAddress;
 	std::string progFilePath;
 
+	bool inputMode = false;          // Flag to check if input mode is active
+	std::string userInput = "";      // Stores user-entered address
+	uint16_t userRamAddress = 0x0000; // Default RAM display address
+	bool firstKeyIgnored = false; // NEW: Track first keypress
+
 	// Utility function to convert to hex
 	std::string hex(uint32_t n, uint8_t d)
 	{
@@ -32,18 +37,28 @@ public:
 	void DrawRam(int x, int y, uint16_t nAddr, int nRows, int nColumns)
 	{
 		int nRamX = x, nRamY = y;
+		uint16_t maxAddr = 0xFFFF;
+		bool flag = false;
+
 		for (int row = 0; row < nRows; row++)
 		{
-			std::string sOffset = "$" + hex(nAddr, 4) + ":";
+			if(flag) break;
+			std::string sOffset = "$" + hex(nAddr, 4) + ":";		
 			for (int col = 0; col < nColumns; col++)
 			{
 				sOffset += " " + hex(emu_bus.read(nAddr, true), 2);
-				nAddr += 1;
+				if(nAddr== maxAddr){
+					flag = true;
+					break;
+				}
+				nAddr++;
 			}
+
 			DrawString(nRamX, nRamY, sOffset);
 			nRamY += 10;
 		}
 	}
+
 
 	void DrawCpu(int x, int y)
 	{
@@ -127,7 +142,7 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime)
 	{
-		Clear(olc::DARK_BLUE);
+		Clear(olc::BLACK);
 
 
 		if (GetKey(olc::Key::SPACE).bPressed) // if space bar key is pressed
@@ -142,19 +157,77 @@ public:
 		if (GetKey(olc::Key::R).bPressed)
 			emu_bus.cpu.reset(progStartAddress);
 
+	
+		//Taking User Input (Address Memory) for viewing Mem Segment
+	// Start input mode when 'E' is pressed
+    if (GetKey(olc::Key::E).bPressed) {
+        inputMode = true;
+        userInput.clear();
+        firstKeyIgnored = false; // Reset flag
+    }
+
+    // Handle text input
+    if (inputMode)
+    {
+        DrawString(10, 400, "Enter Address: $" + userInput + "_", olc::YELLOW);
+
+        for (int k = (int)olc::Key::A; k <= (int)olc::Key::Z; k++)
+        {
+            if (GetKey((olc::Key)k).bPressed) {
+                if (!firstKeyIgnored) {
+                    firstKeyIgnored = true; // Ignore the first keypress (E)
+                    continue;
+                }
+                char keyChar = 'A' + (k - (int)olc::Key::A);
+                userInput += keyChar;
+            }
+        }
+
+        for (int k = (int)olc::Key::K0; k <= (int)olc::Key::K9; k++)
+        {
+            if (GetKey((olc::Key)k).bPressed) {
+                if (!firstKeyIgnored) {
+                    firstKeyIgnored = true;
+                    continue;
+                }
+                char keyChar = '0' + (k - (int)olc::Key::K0);
+                userInput += keyChar;
+            }
+        }
+
+        if (GetKey(olc::Key::BACK).bPressed && !userInput.empty()) {
+            userInput.pop_back();
+        }
+
+        if (GetKey(olc::Key::ENTER).bPressed && !userInput.empty())
+        {
+            try {
+                userRamAddress = static_cast<uint16_t>(std::stoul(userInput, nullptr, 16));
+            } catch (...) {
+                userRamAddress = 0x0000;
+            }
+            inputMode = false;
+        }
+    }
 		/*
 		16 col => Each col has 1 byte (8 bit) of data corresponding to 1 address(16 bit)
 		==> 1 st row address displayed = 0000h
 		==> 2nd row address displayed = 0010h (10h = 16 in dec)
 		==> 1st row 1st col data is corresponding to address 0001h
 		*/				
-		DrawRam(2, 2, 0x0000, 16, 16); // draws start Adress = 0000h and 16 rows and 16 col
-		DrawRam(2, 182, 0x8000, 16, 16); // 1st 2 params (2,182) position on screen where to start draw
+		DrawRam(2, 2, userRamAddress, 16, 16); // draws start Adress = 0000h and 16 rows and 16 col
+		DrawRam(2, 182, progStartAddress, 16, 16); // 1st 2 params (2,182) position on screen where to start draw
 		DrawCpu(448, 2);
-		DrawCode(448, 120, 26);
+		DrawCode(448, 121, 26);		
+		DrawString(2, 370, "SPACE = Step Instruction	R = RESET	E = Exam Mem");
 
-		//IRQ : Interrupt Request  NMI: Non Maskable Interrupt
-		DrawString(10, 370, "SPACE = Step Instruction    R = RESET");
+		//To make beatiful
+		// Draw borders
+		DrawRect(0, 0, 435, 162, olc::WHITE);  // User Examined RAM
+		DrawRect(0, 180, 435, 162, olc::WHITE); // Program RAM		
+		DrawRect(445, 0, 230, 102, olc::WHITE); // Draw CPU Registers		
+		DrawRect(445, 118, 230, 272, olc::WHITE);// Draw Code Disassembly
+		DrawRect(0, 365, 435, 17, olc::WHITE);
 
 		return true;
 	}
@@ -173,7 +246,7 @@ clock() --> executes only 1 instruction
 int main(int argc, char* argv[])
 {
     if (argc != 3) {
-        std::cerr << "Emu Usage: " << argv[0] << " <start_address> <filename>" << std::endl;
+        std::cerr << "Emu Usage: " << argv[0] << " <prog start_address> <filename>" << std::endl;
         return 1;
     }
 
@@ -181,6 +254,11 @@ int main(int argc, char* argv[])
 
 	pge.progFilePath = std::string(argv[2]);
 	pge.progStartAddress = static_cast<uint16_t>(std::stoul(argv[1], nullptr, 16)); 
+
+	if(!(pge.progStartAddress >= 0x0000 and pge.progStartAddress <= 0xFFFF)){
+		std::cerr<< "Invalid program Start Address\n";
+		return 1;
+	}
 
 	if(pge.Construct(680, 480, 2, 2))
 		pge.Start();
