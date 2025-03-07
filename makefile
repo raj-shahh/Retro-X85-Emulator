@@ -1,6 +1,6 @@
 # Compiler
 CXX := g++
-CXXFLAGS := -std=c++17 -Iinclude
+CXXFLAGS := -std=c++17 -Iinclude -g -O0
 LDFLAGS := -lX11 -lGL -lpthread -lpng -lstdc++fs
 
 # Directories
