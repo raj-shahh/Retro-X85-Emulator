@@ -109,9 +109,9 @@ struct INSTRUCTION {
 protected:
     //Utiltiy Functions .......................
 
-    uint8_t read(uint16_t a);
+    virtual uint8_t read(uint16_t a); // made virtual for ease of cpuTest implementation
 
-    void write(uint16_t a, uint8_t d);
+    virtual void write(uint16_t a, uint8_t d);
 
     uint8_t RST_helper(uint8_t n);
 
