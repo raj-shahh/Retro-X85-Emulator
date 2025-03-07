@@ -40,12 +40,12 @@ uint8_t cpu8085::ANA_L(){
 }
 
 uint8_t cpu8085::ANA_M(){
-    uint16_t addr = (h << 8) | l;
+    uint16_t addr = (static_cast<uint16_t>(h) << 8) | static_cast<uint16_t>(l);
     return logicalOperationFlagSetter(*this, read(addr) & a, false, true);
 }
 
 uint8_t cpu8085::ANI() {
-    uint8_t val = read(pc++);
+    uint8_t val = fetched_low;
     return logicalOperationFlagSetter(*this, val & a, false, true);
 }
 
@@ -78,12 +78,12 @@ uint8_t cpu8085::XRA_L() {
 }
 
 uint8_t cpu8085::XRA_M() {
-    uint16_t addr = (h << 8) | l;
+    uint16_t addr = (static_cast<uint16_t>(h) << 8) | static_cast<uint16_t>(l);
     return logicalOperationFlagSetter(*this, read(addr) & a, false, false);
 }
 
 uint8_t cpu8085::XRI() {
-    uint8_t val = read(pc++);
+    uint8_t val = fetched_low;
     return logicalOperationFlagSetter(*this, val ^ a, false, false);
 }
 
@@ -116,12 +116,12 @@ uint8_t cpu8085::ORA_L(){
 }
 
 uint8_t cpu8085::ORA_M(){
-    uint16_t addr = (h << 8) | l;
+    uint16_t addr = (static_cast<uint16_t>(h) << 8) | static_cast<uint16_t>(l);
     return logicalOperationFlagSetter(*this, read(addr) | a, false, false);
 }
 
 uint8_t cpu8085::ORI() {
-    uint8_t val = read(pc++);
+    uint8_t val = fetched_low;
     return logicalOperationFlagSetter(*this, val | a, false, false);
 }
 
@@ -167,13 +167,13 @@ uint8_t cpu8085::CMP_L(){
 }
 
 uint8_t cpu8085::CMP_M(){
-    uint16_t addr = (h << 8) | l;
+    uint16_t addr = (static_cast<uint16_t>(h) << 8) | static_cast<uint16_t>(l);
     cmpFlagSetter(*this, read(addr));
     return 0;
 }
 
 uint8_t cpu8085::CPI() {
-    uint8_t val = read(pc++);
+    uint8_t val = fetched_low;
     cmpFlagSetter(*this, val);
     return 0;
 }

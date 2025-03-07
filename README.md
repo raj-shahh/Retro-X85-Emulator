@@ -17,9 +17,12 @@ Temporary repo for 8085 emulator
     cd 8085_temp
     make clean                                                        ; to del ./build
     make debug -j${nproc}                                             ; build
-    gdb --args ./build/emu 8000 ./egInputs/add2Nums.op --step_wise    ; run
+    gdb --args ./build/emu 8000 ./egInputs/add2Nums.op --one_go       ; run
 
 ## How to Build and Run(Tests)
     cd 8085_temp/tests
     make test -j${nproc}            ; builds and then runs
     make clean                      ; to del ../build_tests
+
+## Additional command for wsl users before running program
+    export LIBGL_ALWAYS_SOFTWARE=1
