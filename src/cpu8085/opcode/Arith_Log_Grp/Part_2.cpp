@@ -2,8 +2,8 @@
 #include "Bus.h"
 
 uint8_t inrDcrReg(cpu8085 &cpu8085, uint8_t& reg, bool dcr = false) {
-    bool aux_flag_cond = (reg & 0x0F + ((-1) ^ dcr) & 0x0F) > 0x0F;
-    cpu8085.allSetFlags(reg + ((-1) ^ dcr) & 0xFF, aux_flag_cond, false);
+    bool aux_flag_cond = (reg & 0x0F + (dcr ? -1 : 1) & 0x0F) > 0x0F;
+    cpu8085.allSetFlags(reg + (dcr ? -1 : 1) & 0xFF, aux_flag_cond, false);
     reg = (reg + (dcr ? -1 : 1)) & 0xFF;
     return 0;
 }
@@ -37,7 +37,7 @@ uint8_t cpu8085::INR_L() {
 }
 
 uint8_t cpu8085::INR_M() {
-    uint16_t addr = (h << 8) | l;
+    uint16_t addr = (static_cast<uint16_t>(h) << 8) | static_cast<uint16_t>(l);
     uint8_t val = read(addr);
     inrDcrReg(*this, val);
     write(addr, val);
@@ -73,7 +73,7 @@ uint8_t cpu8085::DCR_L() {
 }
 
 uint8_t cpu8085::DCR_M() {
-    uint16_t addr = (h << 8) | l;
+    uint16_t addr = (static_cast<uint16_t>(h) << 8) | static_cast<uint16_t>(l);
     uint8_t val = read(addr);
     inrDcrReg(*this, val, true);
     write(addr, val);
@@ -81,7 +81,7 @@ uint8_t cpu8085::DCR_M() {
 }
 
 uint8_t inxDcxRegPair(uint8_t &reg1, uint8_t &reg2, bool inx = true) {
-    uint16_t regPairVal = (reg1 << 8) | reg2;
+    uint16_t regPairVal = (static_cast<uint16_t>(reg1) << 8) | static_cast<uint16_t>(reg2);
     regPairVal = regPairVal + (inx ? 1 : -1);
 
     reg1 = (regPairVal >> 8) & 0xFF;

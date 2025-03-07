@@ -3,8 +3,8 @@
 
 //reg1 is always accumulator
 uint8_t addSubRegisters(cpu8085 &cpu8085, uint8_t reg2, bool carry = false, bool subtract = false){
-    uint16_t tempComputation = cpu8085.a + (-1)^subtract * (reg2 + carry);
-    bool auxFlagCond = (cpu8085.a & 0x0F) + (-1)^subtract *(reg2 & 0x0F) + (-1)^subtract *(carry & 0x0F) > 0x0F;
+    uint16_t tempComputation = cpu8085.a + (subtract ? -1 : 1) * (reg2 + carry);
+    bool auxFlagCond = (cpu8085.a & 0x0F) + (subtract ? -1 : 1) *(reg2 & 0x0F) + (subtract ? -1 : 1) *(carry & 0x0F) > 0x0F;
     cpu8085.allSetFlags(tempComputation, auxFlagCond);
     cpu8085.a = tempComputation & 0xFF;
     return 0;
@@ -39,12 +39,12 @@ uint8_t cpu8085::ADD_L(){
 }
 
 uint8_t cpu8085::ADD_M(){
-    uint16_t addr = (h << 8) | l;
+   uint16_t addr = (static_cast<uint16_t>(h) << 8) | static_cast<uint16_t>(l);
     return addSubRegisters(*this, read(addr));
 }
 
 uint8_t cpu8085::ADI() {
-    uint8_t val = read(pc++);
+    uint8_t val = fetched_low;
     return addSubRegisters(*this, val);
 }
 
@@ -77,12 +77,12 @@ uint8_t cpu8085::ADC_L(){
 }
 
 uint8_t cpu8085::ADC_M(){
-    uint16_t addr = (h << 8) | l;
+    uint16_t addr = (static_cast<uint16_t>(h) << 8) | static_cast<uint16_t>(l);
     return addSubRegisters(*this, read(addr), GetFlag(FLAGS8085::C));
 }
 
 uint8_t cpu8085::ACI() {
-    uint8_t val = read(pc++);
+    uint8_t val = fetched_low;
     return addSubRegisters(*this, val, GetFlag(FLAGS8085::C));
 }
 
@@ -115,12 +115,12 @@ uint8_t cpu8085::SUB_L() {
 }
 
 uint8_t cpu8085::SUB_M() {
-    uint16_t addr = (h << 8) | l;
+    uint16_t addr = (static_cast<uint16_t>(h) << 8) | static_cast<uint16_t>(l);
     return addSubRegisters(*this, read(addr), false, true);
 }
 
 uint8_t cpu8085::SUI() {
-    uint8_t val = read(pc++);
+    uint8_t val = fetched_low;
     return addSubRegisters(*this, val, false, true);
 }
 
@@ -153,17 +153,17 @@ uint8_t cpu8085::SBB_L() {
 }
 
 uint8_t cpu8085::SBB_M() {
-    uint16_t addr = (h << 8) | l;
+    uint16_t addr = (static_cast<uint16_t>(h) << 8) | static_cast<uint16_t>(l);
     return addSubRegisters(*this, read(addr), GetFlag(FLAGS8085::C), true);
 }
 
 uint8_t cpu8085::SBI() {
-    uint8_t val = read(pc++);
+    uint8_t val = fetched_low;
     return addSubRegisters(*this, val, GetFlag(FLAGS8085::C), true);
 }
 
 uint8_t DAD(cpu8085& cpu8085, uint16_t regPair){
-    uint16_t hl = (cpu8085.h << 8) | cpu8085.l;
+    uint16_t hl = (static_cast<uint16_t>(cpu8085.h) << 8) | static_cast<uint16_t>(cpu8085.l);
     uint32_t tempComputation = hl + regPair;
     cpu8085.SetFlag(cpu8085.FLAGS8085::C, tempComputation > 0xFFFF);
     cpu8085.h = (tempComputation >> 8) & 0xFF;
@@ -172,17 +172,17 @@ uint8_t DAD(cpu8085& cpu8085, uint16_t regPair){
 }
 
 uint8_t cpu8085::DAD_B(){
-    uint16_t bc = (b << 8) | c;
+    uint16_t bc = (static_cast<uint16_t>(b) << 8) | static_cast<uint16_t>(c);
     return DAD(*this, bc);
 }
 
 uint8_t cpu8085::DAD_D(){
-    uint16_t de = (d << 8) | e;
+    uint16_t de = (static_cast<uint16_t>(d) << 8) | static_cast<uint16_t>(e);
     return DAD(*this, de);
 }
 
 uint8_t cpu8085::DAD_H(){
-    uint16_t hl = (h << 8) | l;
+    uint16_t hl = (static_cast<uint16_t>(h) << 8) | static_cast<uint16_t>(l);
     return DAD(*this, hl);
 }
 
