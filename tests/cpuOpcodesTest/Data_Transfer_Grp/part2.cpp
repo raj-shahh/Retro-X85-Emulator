@@ -107,3 +107,157 @@ TEST_F(CpuTest, XCHG) {
     EXPECT_EQ(h, 0x12);
     EXPECT_EQ(l, 0x34);
 }
+
+
+
+// ------------------------- MOV Edge Cases -------------------------
+
+// Test MOV E, E (Self Assignment)
+TEST_F(CpuTest, MOV_E_E) {
+    e = 0x55;
+    MOV_E_E();
+    EXPECT_EQ(e, 0x55);
+}
+
+// Test MOV E, A with 0x00
+TEST_F(CpuTest, MOV_E_A_Zero) {
+    a = 0x00;
+    MOV_E_A();
+    EXPECT_EQ(e, 0x00);
+}
+
+// Test MOV E, A with 0xFF
+TEST_F(CpuTest, MOV_E_A_Full) {
+    a = 0xFF;
+    MOV_E_A();
+    EXPECT_EQ(e, 0xFF);
+}
+
+// Test MOV H, H (Self Assignment)
+TEST_F(CpuTest, MOV_H_H) {
+    h = 0x77;
+    MOV_H_H();
+    EXPECT_EQ(h, 0x77);
+}
+
+// Test MOV H, B with 0x00
+TEST_F(CpuTest, MOV_H_B_Zero) {
+    b = 0x00;
+    MOV_H_B();
+    EXPECT_EQ(h, 0x00);
+}
+
+// Test MOV H, B with 0xFF
+TEST_F(CpuTest, MOV_H_B_Full) {
+    b = 0xFF;
+    MOV_H_B();
+    EXPECT_EQ(h, 0xFF);
+}
+
+// Test MOV L, C with 0x00
+TEST_F(CpuTest, MOV_L_C_Zero) {
+    c = 0x00;
+    MOV_L_C();
+    EXPECT_EQ(l, 0x00);
+}
+
+// Test MOV L, C with 0xFF
+TEST_F(CpuTest, MOV_L_C_Full) {
+    c = 0xFF;
+    MOV_L_C();
+    EXPECT_EQ(l, 0xFF);
+}
+
+// Test MOV M, A when A is 0x00
+TEST_F(CpuTest, MOV_M_A_Zero) {
+    h = 0x40;
+    l = 0x50;
+    a = 0x00;
+    MOV_M_A();
+    EXPECT_EQ(read(0x4050), 0x00);
+}
+
+// Test MOV M, A when A is 0xFF
+TEST_F(CpuTest, MOV_M_A_Full) {
+    h = 0x40;
+    l = 0x50;
+    a = 0xFF;
+    MOV_M_A();
+    EXPECT_EQ(read(0x4050), 0xFF);
+}
+
+// Test MOV M, E when E is 0x00
+TEST_F(CpuTest, MOV_M_E_Zero) {
+    h = 0x80;
+    l = 0x90;
+    e = 0x00;
+    MOV_M_E();
+    EXPECT_EQ(read(0x8090), 0x00);
+}
+
+// Test MOV M, E when E is 0xFF
+TEST_F(CpuTest, MOV_M_E_Full) {
+    h = 0x80;
+    l = 0x90;
+    e = 0xFF;
+    MOV_M_E();
+    EXPECT_EQ(read(0x8090), 0xFF);
+}
+
+// Test MOV M, H when H is 0x90
+TEST_F(CpuTest, MOV_M_H_Zero) {
+    h = 0x90;
+    l = 0xA0;
+    MOV_M_H();
+    EXPECT_EQ(read(0x90A0), 0x90);
+}
+
+// Test MOV M, H when H is 0xFF
+TEST_F(CpuTest, MOV_M_H_Full) {
+    h = 0xFF;
+    l = 0xA0;
+    MOV_M_H();
+    EXPECT_EQ(read(0xFFA0), 0xFF);
+}
+
+// ------------------------- XCHG Edge Cases -------------------------
+
+// Test XCHG with 0x00 and 0xFF
+TEST_F(CpuTest, XCHG_Zero_Full) {
+    d = 0x00;
+    e = 0xFF;
+    h = 0xFF;
+    l = 0x00;
+    XCHG();
+    EXPECT_EQ(d, 0xFF);
+    EXPECT_EQ(e, 0x00);
+    EXPECT_EQ(h, 0x00);
+    EXPECT_EQ(l, 0xFF);
+}
+
+// Test XCHG with same values in DE and HL
+TEST_F(CpuTest, XCHG_SameValues) {
+    d = 0x12;
+    e = 0x34;
+    h = 0x12;
+    l = 0x34;
+    XCHG();
+    EXPECT_EQ(d, 0x12);
+    EXPECT_EQ(e, 0x34);
+    EXPECT_EQ(h, 0x12);
+    EXPECT_EQ(l, 0x34);
+}
+
+// Test XCHG with H=L and D=E (Invalid but should not crash)
+TEST_F(CpuTest, XCHG_HL_DE_Same) {
+    d = 0x56;
+    e = 0x56;
+    h = 0x56;
+    l = 0x56;
+    XCHG();
+    EXPECT_EQ(d, 0x56);
+    EXPECT_EQ(e, 0x56);
+    EXPECT_EQ(h, 0x56);
+    EXPECT_EQ(l, 0x56);
+}
+

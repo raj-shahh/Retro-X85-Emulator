@@ -152,3 +152,98 @@ TEST_F(CpuTest, STA) {
     STA();
     EXPECT_EQ(read(0x1357), 0x88);
 }
+
+
+////////////////////////////// Extra MVI Tests //////////////////////////////
+
+TEST_F(CpuTest, MVI_A_Zero) {
+    fetched_low = 0x00;
+    MVI_A();
+    EXPECT_EQ(a, 0x00);
+}
+
+TEST_F(CpuTest, MVI_A_Max) {
+    fetched_low = 0xFF;
+    MVI_A();
+    EXPECT_EQ(a, 0xFF);
+}
+
+TEST_F(CpuTest, MVI_M_Zero) {
+    h = 0x20;
+    l = 0x30;
+    fetched_low = 0x00;
+    MVI_M();
+    EXPECT_EQ(read(0x2030), 0x00);
+}
+
+TEST_F(CpuTest, MVI_M_Max) {
+    h = 0x20;
+    l = 0x30;
+    fetched_low = 0xFF;
+    MVI_M();
+    EXPECT_EQ(read(0x2030), 0xFF);
+}
+
+////////////////////////////// Extra LXI Tests //////////////////////////////
+
+TEST_F(CpuTest, LXI_B_Zero) {
+    fetched_high = 0x00;
+    fetched_low = 0x00;
+    LXI_B();
+    EXPECT_EQ(b, 0x00);
+    EXPECT_EQ(c, 0x00);
+}
+
+TEST_F(CpuTest, LXI_B_Max) {
+    fetched_high = 0xFF;
+    fetched_low = 0xFF;
+    LXI_B();
+    EXPECT_EQ(b, 0xFF);
+    EXPECT_EQ(c, 0xFF);
+}
+
+TEST_F(CpuTest, LXI_SP_Zero) {
+    fetched_high = 0x00;
+    fetched_low = 0x00;
+    LXI_SP();
+    EXPECT_EQ(stkp, 0x0000);
+}
+
+TEST_F(CpuTest, LXI_SP_Max) {
+    fetched_high = 0xFF;
+    fetched_low = 0xFF;
+    LXI_SP();
+    EXPECT_EQ(stkp, 0xFFFF);
+}
+
+////////////////////////////// Extra Load Tests //////////////////////////////
+
+TEST_F(CpuTest, LDA_Zero) {
+    addr_abs = 0x1357;
+    write(0x1357, 0x00);
+    LDA();
+    EXPECT_EQ(a, 0x00);
+}
+
+TEST_F(CpuTest, LDA_Max) {
+    addr_abs = 0x1357;
+    write(0x1357, 0xFF);
+    LDA();
+    EXPECT_EQ(a, 0xFF);
+}
+
+////////////////////////////// Extra Store Tests //////////////////////////////
+
+TEST_F(CpuTest, STA_Zero) {
+    addr_abs = 0x1357;
+    a = 0x00;
+    STA();
+    EXPECT_EQ(read(0x1357), 0x00);
+}
+
+TEST_F(CpuTest, STA_Max) {
+    addr_abs = 0x1357;
+    a = 0xFF;
+    STA();
+    EXPECT_EQ(read(0x1357), 0xFF);
+}
