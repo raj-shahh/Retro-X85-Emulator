@@ -70,8 +70,8 @@ public: // Member functions
 
     std::map<uint16_t, std::string> disassemble(uint16_t nStart, uint16_t nStop);
 
-private:
-    ////////////  Pvt Data Members /////////////////////////
+protected:
+    ////////////  Utility Data Members /////////////////////////
 
     // Assisstive variables to facilitate emulation
     uint8_t fetched_low = 0x00; // MVI C 15 => fectched_low =15
@@ -106,7 +106,7 @@ struct INSTRUCTION {
 
     std::vector<INSTRUCTION> lookup;
 
-private:
+protected:
     //Utiltiy Functions .......................
 
     uint8_t read(uint16_t a);
@@ -115,7 +115,7 @@ private:
 
     uint8_t RST_helper(uint8_t n);
 
-private:
+protected:
     // Addressing Modes =============================================
     // Manipulates fetched_low(data), fetched_high(data) and addr_abs(address) variables
 
@@ -125,7 +125,7 @@ private:
 
     // for rest addressing modes concern register call XXX() and handle main logic in the instruction itself
 
-private:
+protected:
     // Opcodes ===================INstructions===================================
 
     // All return type uint8_t [extra cycles required]

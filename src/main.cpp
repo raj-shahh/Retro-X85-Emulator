@@ -260,7 +260,7 @@ public:
 
 /*					Working
 When create pge(main()) --> creates Bus obj(emu_bus) as data member
-When emu_bus is created creates cpu obj ( as data member) [init pc]
+When emu_bus is created creates cpu obj ( as data member) [init.cpp]
 As we press space bar -> exe cpu.clock(); // OnUSerUpdate (exe every frame)
 clock() --> executes only 1 instruction
 ** The code to be executed is Stored in Ram [OnUSerCreate (exe Once)]
