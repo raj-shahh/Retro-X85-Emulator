@@ -133,7 +133,7 @@ uint8_t cpu8085::DAA() {
     }
 
     uint8_t upperNibble = a & 0xF0;
-    if (upperNibble > 9 || GetFlag(FLAGS8085::C)) {
+    if (upperNibble > 0x90 || GetFlag(FLAGS8085::C)) {
         uint16_t temp = a + 0x60;
         allSetFlags(temp, false);
         a = temp & 0xFF;

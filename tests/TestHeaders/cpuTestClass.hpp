@@ -23,7 +23,7 @@ protected:
         // Initialize CPU registers before each test
         a = b = c = d = e = h = l = 0;
         status = 0;
-        stkp = 0xFFFF;
+        stkp = 0x1000;
         pc = 0;
     }
 

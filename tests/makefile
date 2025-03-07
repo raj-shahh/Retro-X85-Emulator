@@ -1,6 +1,6 @@
 # Compiler
 CXX := g++
-CXXFLAGS := -std=c++17 -I../include -I./TestHeaders
+CXXFLAGS := -std=c++17 -I../include -I./TestHeaders -g
 LDFLAGS := -lgtest -lgtest_main -pthread
 
 # Directories
