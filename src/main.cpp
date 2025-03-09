@@ -7,6 +7,7 @@
 
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
+#include "assembler.h"
 
 
 
@@ -275,12 +276,19 @@ int main(int argc, char* argv[])
 
 	Emulate_cpu8085 pge; //pixel game engine
 
-	pge.progFilePath = std::string(argv[2]);
-	pge.progStartAddress = static_cast<uint16_t>(std::stoul(argv[1], nullptr, 16)); 
-
+	pge.progStartAddress = static_cast<uint16_t>(std::stoul(argv[1], nullptr, 16));
 	if(!(pge.progStartAddress >= 0x0000 and pge.progStartAddress <= 0xFFFF)){
 		std::cerr<< "Invalid program Start Address\n";
 		return 1;
+	}
+
+	std::string filePath = argv[2];
+	if (filePath.ends_with("asm")) {
+		Assembler assembler;
+		assembler.assemble(filePath, pge.progStartAddress);
+		pge.progFilePath = ASSEMBLER_OUTPUT_FILEPATH;
+	} else {
+		pge.progFilePath = std::string(argv[2]);
 	}
 
     // Determine execution mode
