@@ -60,8 +60,8 @@ public: // Member functions
 
     void SetFlag(FLAGS8085 f, bool v);
 
-    void allSetFlags(uint16_t tempComputation, bool aux_flag_cond, bool setCarry = true) {
-        if (setCarry) SetFlag(FLAGS8085::C, tempComputation > 0xFF);
+    void allSetFlags(int16_t tempComputation, bool aux_flag_cond, bool setCarry = true) {
+        if (setCarry) SetFlag(FLAGS8085::C, tempComputation > 0xFF || tempComputation < 0);
         SetFlag(FLAGS8085::Z, (tempComputation & 0xFF) == 0);
         SetFlag(FLAGS8085::S, tempComputation & 0x80);
         SetFlag(FLAGS8085::P, __builtin_popcount(tempComputation & 0xFF) & 0x01 == 0);
