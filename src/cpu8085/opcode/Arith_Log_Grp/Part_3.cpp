@@ -126,7 +126,7 @@ uint8_t cpu8085::ORI() {
 }
 
 void cmpFlagSetter(cpu8085 &cpu8085, uint8_t val) {
-    uint8_t temp = cpu8085.a - val;
+    int16_t temp = cpu8085.a - val;
     bool aux_flag_cond = (cpu8085.a & 0x0F) - (val & 0x0F) > 0x0F;
     cpu8085.allSetFlags(temp, aux_flag_cond);
 }

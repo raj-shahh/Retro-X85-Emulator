@@ -81,7 +81,7 @@ uint8_t cpu8085::DCR_M() {
 }
 
 uint8_t inxDcxRegPair(uint8_t &reg1, uint8_t &reg2, bool inx = true) {
-    uint16_t regPairVal = (static_cast<uint16_t>(reg1) << 8) | static_cast<uint16_t>(reg2);
+    int16_t regPairVal = (static_cast<uint16_t>(reg1) << 8) | static_cast<uint16_t>(reg2);
     regPairVal = regPairVal + (inx ? 1 : -1);
 
     reg1 = (regPairVal >> 8) & 0xFF;

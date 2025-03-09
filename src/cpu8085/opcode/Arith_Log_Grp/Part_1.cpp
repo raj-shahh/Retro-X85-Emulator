@@ -3,7 +3,7 @@
 
 //reg1 is always accumulator
 uint8_t addSubRegisters(cpu8085 &cpu8085, uint8_t reg2, bool carry = false, bool subtract = false){
-    uint16_t tempComputation = cpu8085.a + (subtract ? -1 : 1) * (reg2 + carry);
+    int16_t tempComputation = cpu8085.a + (subtract ? -1 : 1) * (reg2 + carry);
     bool auxFlagCond = (cpu8085.a & 0x0F) + (subtract ? -1 : 1) *(reg2 & 0x0F) + (subtract ? -1 : 1) *(carry & 0x0F) > 0x0F;
     cpu8085.allSetFlags(tempComputation, auxFlagCond);
     cpu8085.a = tempComputation & 0xFF;
