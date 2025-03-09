@@ -7,10 +7,7 @@
 
 
 uint8_t cpu8085::JMP() {
-    uint8_t lowerAddrByte = fetched_low;
-    uint8_t upperAddrByte = fetched_high;
-
-    pc = (static_cast<uint16_t>(upperAddrByte) << 8) | static_cast<uint16_t>(lowerAddrByte);
+    pc = addr_abs;
     return 0;
 }
 
@@ -92,14 +89,11 @@ uint8_t cpu8085::PCHL() {
 }
 
 uint8_t cpu8085::CALL() {
-    uint8_t lowerAddrByte = fetched_low;
-    uint8_t upperAddrByte = fetched_high;
-
     write(stkp - 1, (pc >> 8) & 0xFF);
     write(stkp - 2, pc & 0xFF);
     stkp -= 2;
 
-    pc = (static_cast<uint16_t>(upperAddrByte) << 8) | static_cast<uint16_t>(lowerAddrByte);
+    pc = addr_abs;
     return 0;
 }
 

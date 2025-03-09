@@ -3,8 +3,7 @@
 ////////////////////////////// Unconditional Jump //////////////////////////////
 
 TEST_F(CpuTest, JMP) {
-    fetched_high = 0x12;
-    fetched_low = 0x34;
+    addr_abs = 0x1234;
     JMP();
     EXPECT_EQ(pc, 0x1234);
 }
@@ -13,8 +12,7 @@ TEST_F(CpuTest, JMP) {
 
 #define TEST_JUMP_CONDITION(instruction, flag, flag_value, expected_pc) \
     TEST_F(CpuTest, instruction##_##flag_value) { \
-        fetched_high = 0x56; \
-        fetched_low = 0x78; \
+        addr_abs = 0x5678; \
         pc = 0x0000; \
         SetFlag(FLAGS8085::flag, flag_value); \
         instruction(); \
@@ -41,8 +39,7 @@ TEST_JUMP_CONDITION(JM, S, 0, 0x0002)
 ////////////////////////////// Unconditional CALL //////////////////////////////
 
 TEST_F(CpuTest, CALL) {
-    fetched_high = 0xAB;
-    fetched_low = 0xCD;
+    addr_abs = 0xABCD;
     pc = 0x5678;
     stkp = 0xFFFE;
     CALL();
@@ -56,8 +53,7 @@ TEST_F(CpuTest, CALL) {
 
 #define TEST_CALL_CONDITION(instruction, flag, flag_value, expected_pc, expected_stkp) \
     TEST_F(CpuTest, instruction##_##flag_value) { \
-        fetched_high = 0x22; \
-        fetched_low = 0x33; \
+        addr_abs = 0x2233; \
         pc = 0x5678; \
         stkp = 0xFFFE; \
         SetFlag(FLAGS8085::flag, flag_value); \
@@ -100,19 +96,16 @@ TEST_RET_CONDITION(RNZ, Z, 1, 0x0000, 0xFFFC)
 TEST_RET_CONDITION(RZ, Z, 1, 0x3412, 0xFFFE)
 TEST_RET_CONDITION(RZ, Z, 0, 0x0000, 0xFFFC)
 
-
 ////////////////////////////// Extra Edge Cases //////////////////////////////
 
 TEST_F(CpuTest, JMP_MaxAddress) {
-    fetched_high = 0xFF;
-    fetched_low = 0xFF;
+    addr_abs = 0xFFFF;
     JMP();
     EXPECT_EQ(pc, 0xFFFF);
 }
 
 TEST_F(CpuTest, CALL_StackWrapAround) {
-    fetched_high = 0x12;
-    fetched_low = 0x34;
+    addr_abs = 0x1234;
     pc = 0x5678;
     stkp = 0x0000; // Edge case: stack wraps around
     CALL();
@@ -132,8 +125,7 @@ TEST_F(CpuTest, RET_StackWrapAround) {
 }
 
 TEST_F(CpuTest, CALL_NearEndMemory) {
-    fetched_high = 0xFE;
-    fetched_low = 0xFF;
+    addr_abs = 0xFEFF;
     pc = 0xFFFF;
     stkp = 0xFFFE;
     CALL();
@@ -153,8 +145,7 @@ TEST_F(CpuTest, RET_NearEndMemory) {
 }
 
 TEST_F(CpuTest, JNZ_MaxPC_NoJump) {
-    fetched_high = 0x80;
-    fetched_low = 0x00;
+    addr_abs = 0x8000;
     pc = 0xFFFF; // Edge case: Max PC value, should not jump
     SetFlag(FLAGS8085::Z, 1);
     JNZ();
@@ -162,8 +153,7 @@ TEST_F(CpuTest, JNZ_MaxPC_NoJump) {
 }
 
 TEST_F(CpuTest, JZ_MaxPC_Jump) {
-    fetched_high = 0x80;
-    fetched_low = 0x00;
+    addr_abs = 0x8000;
     pc = 0xFFFF; // Edge case: Max PC value, should jump
     SetFlag(FLAGS8085::Z, 1);
     JZ();
@@ -171,8 +161,7 @@ TEST_F(CpuTest, JZ_MaxPC_Jump) {
 }
 
 TEST_F(CpuTest, CNZ_MinStack) {
-    fetched_high = 0x44;
-    fetched_low = 0x55;
+    addr_abs = 0x4455;
     pc = 0x1234;
     stkp = 0x0002; // Edge case: Stack near bottom
     SetFlag(FLAGS8085::Z, 0);
@@ -192,4 +181,3 @@ TEST_F(CpuTest, RNZ_MinStack) {
     EXPECT_EQ(pc, 0x1234);
     EXPECT_EQ(stkp, 0x0002);
 }
-
