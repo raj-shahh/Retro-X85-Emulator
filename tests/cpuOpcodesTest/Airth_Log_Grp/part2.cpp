@@ -96,15 +96,18 @@ TEST_F( CpuTest, DCX_SP) {
 // ------------------------- DAA Test -------------------------
 
 TEST_F( CpuTest, DAA) {
-     a = 0x45;
+     reset(0);
+      a = 0x45;
      DAA();
     EXPECT_EQ( a, 0x45);  // No change as no flags are set
 
+    reset(0);
      a = 0x0B;
      SetFlag(FLAGS8085::A, true);
      DAA();
     EXPECT_EQ( a, 0x11);  // Adjusts by 6 due to auxiliary carry
 
+     reset(0);
      a = 0x95;
      SetFlag(FLAGS8085::C, true);
      DAA();
