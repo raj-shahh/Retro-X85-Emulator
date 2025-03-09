@@ -1,6 +1,6 @@
 # Compiler
 CXX := g++
-CXXFLAGS := -std=c++17 -Iinclude
+CXXFLAGS := -std=c++20 -Iinclude
 LDFLAGS := -lX11 -lGL -lpthread -lpng -lstdc++fs
 
 # Directories
@@ -22,7 +22,7 @@ release: CXXFLAGS += -O2
 release: $(TARGET)
 
 # Debug build
-debug: CXXFLAGS += -g -DDEBUG
+debug: CXXFLAGS += -g -DDEBUG -O0
 debug: $(TARGET)
 
 # Link the executable
