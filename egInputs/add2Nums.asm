@@ -1,4 +1,6 @@
-START: MVI A, 05H
-       MVI B, 03H
-       ADD B
-       JMP START
+MVI A, 05H
+MVI B, 03H
+ADD B
+JMP LABEL
+MOV A ,B
+LABEL : RST 0

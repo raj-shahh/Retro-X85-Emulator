@@ -1,14 +1,29 @@
 
 #include <iostream>
 #include <sstream>
+#include <array>
+#include <filesystem>
+#include <regex>
 
 #include "Bus.h"
 #include "cpu8085.h"
+#include "assembler.h"
 
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
-#include "assembler.h"
 
+// For User Configurable RST 0-7
+/* Inside CONFIG_RSTS folder
+There are files of form RST_5_5638.asm
+==> RST_5 is configered by user => active = true
+==> The main code of RST_5 resides at 5638h => lo = 0x38 and hi = 0x56
+==> The contents of asm are fed to assembler and generate RST_5_5638.asm2op = filePath */
+struct RST {
+    bool active = false;
+    uint8_t lo = 0;
+    uint8_t hi = 0;
+    std::string filePath;
+};
 
 
 class Emulate_cpu8085 : public olc::PixelGameEngine
@@ -16,16 +31,25 @@ class Emulate_cpu8085 : public olc::PixelGameEngine
 public:
 	Emulate_cpu8085() { sAppName = "Intel 8085 Emulation"; }
 
-	Bus emu_bus;
-	std::map<uint16_t, std::string> mapAsm; // map assembly
+	Bus emu_bus; // main thing (holds the cpu and ram)
+	std::map<uint16_t, std::string> mapAsm; // for disassembly use [Draw Code]
+
+	bool fullExecutionMode = false; // --one_go	cmd line flag
+	uint16_t y_offset = 50; 		  // related to UI
+
+	// For Exam Mem implementation
+	bool inputMode = false;          // Flag to check if input mode[Exam Mem func] is active
+	std::string userInput = "";      // Stores user-entered address[Exam Mem func]
+	uint16_t userRamAddress = 0x0000; // Default RAM display address
+	bool firstKeyIgnored = false; // Track first keypress
+
+	// For RST Config 
+	std::array<RST, 8> rstArray{};
+	bool configRST = false; // assume user Didnt config
+
+	// Stores User given Code related info
 	uint16_t progStartAddress;
 	std::string progFilePath;
-	uint16_t y_offset = 50; 
-	bool inputMode = false;          // Flag to check if input mode is active
-	std::string userInput = "";      // Stores user-entered address
-	uint16_t userRamAddress = 0x0000; // Default RAM display address
-	bool firstKeyIgnored = false; // NEW: Track first keypress
-	bool fullExecutionMode = false;
 
 	// Utility function to convert to hex
 	std::string hex(uint32_t n, uint8_t d)
@@ -120,17 +144,16 @@ public:
 		}
 	}
 
-	bool OnUserCreate()
-	{
-
-		// Writing prog in Ram by transfer content from file
-		std::ifstream file(progFilePath); // Open the file
+	// Helper Function for OnUserCreate
+	void Load_Code_In_Ram(std::string &FilePath , uint16_t StartAddress){
+		// Writing  in Ram by transfer content from file
+		std::ifstream file(FilePath); // Open the file
 		if (!file.is_open()) {
-			std::cerr << "Error: Could not open file="<<progFilePath<< std::endl;
+			std::cerr << "Error: Could not open file="<<FilePath<< std::endl;
 			exit(EXIT_FAILURE);
 		}
 		
-		uint16_t nOffset = progStartAddress; // start address of code
+		uint16_t nOffset = StartAddress; // start address of code
 		std::string line;
 		while (std::getline(file, line)) { // Read each line
 			if (!line.empty()) {
@@ -141,6 +164,24 @@ public:
 		}
 
 		file.close();
+	}
+
+	bool OnUserCreate()
+	{
+		//Setting Up RST code(user config)
+		if(configRST){
+			for(uint16_t i =0 ; i<= 7 ;i++){
+				if(rstArray[i].active){
+					emu_bus.write(8*i+0, 0xC3); //JMP
+					emu_bus.write(8*i+1, rstArray[i].lo);
+					emu_bus.write(8*i+2, rstArray[i].hi);				
+					Load_Code_In_Ram(rstArray[i].filePath,(((uint16_t)rstArray[i].hi << 8) | rstArray[i].lo ));
+				}
+			}
+		}
+
+		//Setting Up user given code
+		Load_Code_In_Ram(progFilePath,progStartAddress);
 				
 		// Extract dissassembly
 		mapAsm = emu_bus.cpu.disassemble(0x0000, 0xFFFF);
@@ -156,7 +197,7 @@ public:
 
 		if (fullExecutionMode)
 		{
-			// Run instructions until HALT, NOP, or RST is encountered
+			// Run instructions until HALT, NOP encountered
 			while (!emu_bus.cpu.stop_exe_flag)
 			{
 				emu_bus.cpu.clock();				
@@ -174,8 +215,11 @@ public:
 			while (!emu_bus.cpu.complete());
 		}
 
-		if (GetKey(olc::Key::R).bPressed)
+		if (GetKey(olc::Key::R).bPressed){
 			emu_bus.cpu.reset(progStartAddress);
+			fullExecutionMode = false;
+		}
+			
 
 	
 		//Taking User Input (Address Memory) for viewing Mem Segment
@@ -269,39 +313,66 @@ clock() --> executes only 1 instruction
 
 int main(int argc, char* argv[])
 {
-    if (argc < 3 || argc > 4) {
-        std::cerr << "Usage: " << argv[0] << " <prog start_address> <filename> [--step_wise/--one_go]\n";
+	//Validate Command Line Args
+    if (argc < 3 || argc > 5) {
+        std::cerr << "Usage: <must> [optional] " << argv[0] << " <prog start_address> <prog filename> <--step_wise>/<--one_go> [config RST folder]\n";
         return 1;
     }
 
 	Emulate_cpu8085 pge; //pixel game engine
+	Assembler assembler; // .asm -> .asm2op
 
+	//Validate Prog Start Address
 	pge.progStartAddress = static_cast<uint16_t>(std::stoul(argv[1], nullptr, 16));
 	if(!(pge.progStartAddress >= 0x0000 and pge.progStartAddress <= 0xFFFF)){
 		std::cerr<< "Invalid program Start Address\n";
 		return 1;
 	}
 
+	//Assemble if needed
 	std::string filePath = argv[2];
-	if (filePath.ends_with("asm")) {
-		Assembler assembler;
+	if (filePath.ends_with("asm")) {		
 		assembler.assemble(filePath, pge.progStartAddress);
-		pge.progFilePath = ASSEMBLER_OUTPUT_FILEPATH;
+		pge.progFilePath = assembler.ASSEMBLER_OUTPUT_FILEPATH;
 	} else {
-		pge.progFilePath = std::string(argv[2]);
+		pge.progFilePath = filePath;
 	}
 
     // Determine execution mode
-    if (argc == 4) {
-        std::string mode = argv[3];
-        if (mode == "--one_go")
-            pge.fullExecutionMode = true;
-        else if (mode != "--step_wise") {
-            std::cerr << "Invalid execution mode. Use '--step_wise' or '--one_go'.\n";
-            return 1;
-        }
-    }
+	std::string mode = argv[3];
+	if (mode == "--one_go")
+		pge.fullExecutionMode = true;
+	else if (mode != "--step_wise") {
+		std::cerr << "Invalid execution mode. Use '--step_wise' or '--one_go'.\n";
+		return 1;
+	}
 
+	// Config RSTS (software Interrupt)
+	if(argc > 4){
+		pge.configRST = true;
+		std::string configFolder = argv[4];
+		std::regex rstPattern{std::string(R"(RST_([0-7])_([0-9A-Fa-f]{4})\.asm)")};
+		for (const auto& entry : std::filesystem::directory_iterator(configFolder)) {
+			if (!entry.is_regular_file()) continue;
+			std::smatch match;
+			std::string fileName = entry.path().filename().string();
+			
+			if (std::regex_match(fileName, match, rstPattern)) {
+				int index = std::stoi(match[1].str());
+				uint16_t address = std::stoi(match[2].str(), nullptr, 16);
+				
+				if (address >= 0x0048 && address <= 0xFFFF) {
+					pge.rstArray[index].active = true;
+					pge.rstArray[index].lo = address & 0xFF;
+					pge.rstArray[index].hi = (address >> 8) & 0xFF;
+					assembler.assemble(std::filesystem::absolute(entry.path()).string(), address);
+					pge.rstArray[index].filePath = assembler.ASSEMBLER_OUTPUT_FILEPATH;
+				}
+			}
+		}
+	}
+
+	// Start Execution [UI starts]
 	if(pge.Construct(680, 480, 2, 2))
 		pge.Start();
 	return 0;

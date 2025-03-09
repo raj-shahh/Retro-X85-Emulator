@@ -8,7 +8,6 @@ uint8_t cpu8085::RST_helper(uint8_t n){
     write(stkp-2,pc_lower);
     stkp-=2;
     pc = 0+ 8*n;
-    stop_exe_flag = true;
     return 0;
 }
 

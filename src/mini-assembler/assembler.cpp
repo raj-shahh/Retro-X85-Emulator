@@ -218,6 +218,9 @@ void Assembler::writeToOpFile(const std::vector<uint8_t> &code, const std::strin
 }
 
 std::vector<uint8_t> Assembler::assemble(const std::string &filepath, uint16_t startAddress) {
+    
+    ASSEMBLER_OUTPUT_FILEPATH = filepath + "2op";
+    
     std::vector<std::string> lines = readFileLines(filepath);
 
     auto firstPassResult = firstPass(lines, startAddress);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <cstdint>
 #include <sstream>
 #include <vector>
 #include <unordered_map>
@@ -13,7 +14,7 @@
 #include <iomanip>
 #include <map>
 
-const std::string ASSEMBLER_OUTPUT_FILEPATH = "assembler_output.txt";
+
 
 struct LineData {
     uint16_t address;
@@ -22,7 +23,10 @@ struct LineData {
 
 class Assembler {
 public:
+    std::string ASSEMBLER_OUTPUT_FILEPATH;
+
     Assembler();
+
     std::map<std::string, uint8_t> instructionToOpcode;
 
     std::vector<uint8_t> assemble(const std::string &filename, uint16_t startAddress);

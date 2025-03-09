@@ -6,7 +6,7 @@ Temporary repo for 8085 emulator
     sudo apt install build-essential libglu1-mesa-dev libpng-dev  ;for olcGameEngine
     sudo apt install libgtest-dev cmake g++ make                  ;for gtest (install)
     cd /usr/src/googletest
-    sudo cmake . && sudo make && sudo make install
+    sudo cmake . && sudo make && sudo make install                ;build gtest
 
 ## How to Build and Run(Release Mode)
     cd 8085_temp
@@ -21,7 +21,7 @@ Temporary repo for 8085 emulator
 
 ## How to Build and Run(Tests)
     cd 8085_temp/tests
-    make test -j${nproc}            ; builds and then runs
+    make -j${nproc}                 ; builds and then runs
     make clean                      ; to del ../build_tests
 
 ## Additional command for wsl users before running program
