@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+
+echo "Removing Retro_X85_Emu..."
+rm -rf /Emu_x85
+echo "Retro_X85_Emu removed. It will Miss u :)"

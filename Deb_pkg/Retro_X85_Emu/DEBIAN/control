@@ -1,0 +1,6 @@
+Package: retro-x85-emu
+Version: 1.0
+Architecture: x86
+Maintainer: Prithijit Banerjee  Dont.Email.me@example.com
+Depends: libc6 (>= 2.31), libstdc++6 (>= 10), libgcc-s1, libx11-6, libgl1, libpng16-16, libxcb1, libglx0, libglx-mesa0, zlib1g, libxau6, libxdmcp6, libbsd0, libmd0
+Description: Intel 8085A Emulator with Dark Theme Retro Style UI

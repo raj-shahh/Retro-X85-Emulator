@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+
+echo "Setting up Retro_X85_Emu..."
+
+# Ensure directories exist
+mkdir -p /Emu_x85/bin
+mkdir -p /Emu_x85/Config_Rsts
+mkdir -p /Emu_x85/egInputs
+
+# Set  permissions
+chmod +x /Emu_x85/bin/emu
+chmod 777 /Emu_x85/Config_Rsts
+chmod 777 /Emu_x85/egInputs
+
+echo "Retro_X85_Emu installed successfully!"
+echo "You can Now cd into /Emu_x85 folder to find the exe bin and some example inputs"

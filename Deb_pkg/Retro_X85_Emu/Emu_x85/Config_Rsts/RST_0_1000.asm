@@ -1,0 +1,3 @@
+MVI B , 10h
+MOV C , B
+HLT
