@@ -68,3 +68,31 @@ Check out this demo video:
 
 ## How to Run(ALL types of Variants)
     Usage: <must> [optional] ./build/emu <prog start_address> <prog filename> <--step_wise> o/r <--one_go> [config RST folder]
+
+## Deb Pkg Build:-
+    //After making a new exe ./build/emu
+    cd 8085_temp
+    mv ./build/emu ./Deb_pkg/Retro_X85_Emu/Emu_x85/bin/
+    cd ./Deb_pkg; 
+    dpkg-deb --build Retro_X85_Emu  // rebuild pkg 
+
+## Install & Uninstall the .deb Package :-
+    sudo dpkg -i Retro_X85_Emu.deb // install
+    sudo dpkg -r retro-x85-emu     // remove
+
+## Verify Succesfull Install of Deb pkg (check below dir structure exists):-
+    /Emu_x85/
+    ├── bin/
+    │   └── emu
+    ├── Config_Rsts/
+    │   └── RST_0_1000.asm
+    └── egInputs/
+        ├── demo1.asm
+        └── demo2.op
+
+## Eg Use the installed deb_pkg :-
+    cd /Emu_x85
+    ./bin/emu ->Enter to see usage instrction
+    // Some example Runs (either do 1> or 2> )->
+    1> ./bin/emu 8000 ./egInputs/demo1.asm --one_go ./Config_Rsts
+    2> ./bin/emu 1000 ./egInputs/demo2.op --step_wise
