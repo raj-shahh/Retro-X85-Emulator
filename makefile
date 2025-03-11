@@ -6,6 +6,8 @@ LDFLAGS := -lX11 -lGL -lpthread -lpng -lstdc++fs
 # Directories
 SRC_DIR := src
 BUILD_DIR := build
+DEB_PKG_DIR := Deb_pkg/Retro_X85_Emu
+BIN_DIR := $(DEB_PKG_DIR)/Emu_x85/bin
 
 # Find all .cpp files recursively
 SRCS := $(shell find $(SRC_DIR) -type f -name "*.cpp")
@@ -39,8 +41,14 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 
+# Debian Package Build
+debian: $(TARGET)
+	@mkdir -p $(BIN_DIR)
+	mv $(TARGET) $(BIN_DIR)/
+	cd Deb_pkg && dpkg-deb --build Retro_X85_Emu
+
 # Clean build
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: clean debug release
+.PHONY: clean debug release debian
