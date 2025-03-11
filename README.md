@@ -49,17 +49,17 @@ Check out this demo video:
     sudo cmake . && sudo make && sudo make install                ;build gtest
 
 ## How to Build (Release Mode)
-    cd 8085_temp
+    cd Retro-X85-Emulator
     make -j${nproc}                                             ; build
 
 ## How to Build and Run(Debug Mode)
-    cd 8085_temp
+    cd Retro-X85-Emulator
     make clean                                                        ; to del ./build
     make debug -j${nproc}                                             ; build
     gdb --args ./build/emu 8000 ./egInputs/add2Nums.op --step_wise    ; run Example
 
 ## How to Build and Run(Tests)
-    cd 8085_temp/tests
+    cd Retro-X85-Emulator/tests
     make -j${nproc}                 ; builds and then runs
     make clean                      ; to del ../build_tests
 
@@ -67,11 +67,11 @@ Check out this demo video:
     export LIBGL_ALWAYS_SOFTWARE=1
 
 ## How to Run(ALL types of Variants)
-    Usage: <must> [optional] ./build/emu <prog start_address> <prog filename> <--step_wise> o/r <--one_go> [config RST folder]
+    Usage <must> [optional]:~$ ./build/emu <prog start_address> <prog filename> <--step_wise> o/r <--one_go> [config RST folder]
 
 ## Deb Pkg Build:-
     //After making a new exe ./build/emu
-    cd 8085_temp
+    cd Retro-X85-Emulator
     mv ./build/emu ./Deb_pkg/Retro_X85_Emu/Emu_x85/bin/
     cd ./Deb_pkg; 
     dpkg-deb --build Retro_X85_Emu  // rebuild pkg 
