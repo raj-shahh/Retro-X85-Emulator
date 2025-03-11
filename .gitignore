@@ -32,5 +32,5 @@
 *.app
 
 #build folder
-./build
-./build_tests
+build
+build_tests
