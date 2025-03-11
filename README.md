@@ -69,7 +69,10 @@ Check out this demo video:
 ## How to Run(ALL types of Variants)
     Usage <must> [optional]:~$ ./build/emu <prog start_address> <prog filename> <--step_wise> o/r <--one_go> [config RST folder]
 
-## Deb Pkg Build:-
+
+# --------------------------- Debian Packaging -----------------------
+
+##  Re-Build Deb Pkg:-
     //After making a new exe ./build/emu
     cd Retro-X85-Emulator
     mv ./build/emu ./Deb_pkg/Retro_X85_Emu/Emu_x85/bin/
@@ -90,7 +93,7 @@ Check out this demo video:
         ├── demo1.asm
         └── demo2.op
 
-## Eg Use the installed deb_pkg :-
+## Eg Use of the installed deb_pkg :-
     cd /Emu_x85
     ./bin/emu ->Enter to see usage instrction
     // Some example Runs (either do 1> or 2> )->
