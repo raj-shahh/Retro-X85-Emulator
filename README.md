@@ -72,12 +72,9 @@ Check out this demo video:
 
 # --------------------------- Debian Packaging -----------------------
 
-##  Re-Build Deb Pkg:-
-    //After making a new exe ./build/emu
+##  Re-Build Deb Pkg (whenever there is change in /build/emu):-
     cd Retro-X85-Emulator
-    mv ./build/emu ./Deb_pkg/Retro_X85_Emu/Emu_x85/bin/
-    cd ./Deb_pkg; 
-    dpkg-deb --build Retro_X85_Emu  // rebuild pkg 
+    make debian -j${nproc}
 
 ## Install & Uninstall the .deb Package :-
     sudo dpkg -i Retro_X85_Emu.deb // install
