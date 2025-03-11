@@ -18,9 +18,9 @@
     4. Dark Themed Retro Style UI renderd using olcPixelGameEngine from ONE_LONE_CODER
     
     5. Hardware Reset Facility Using the R key [Ps changes mode of execution to --step_wise]
-            -- Thus with this facility can view the contents of Entire Address space 256 Address at a time
-    
+            
     6. Examine Memory -> Given Any Valid Address of Entire Address Space allows us to view Contents of Entire Next 256 Addresses at once
+                        -- Thus with this facility can view the contents of Entire Address space 256 Address at a time
     
     7. Circular Rollback View of Disassembled Code spanning across current Program Counter
 
